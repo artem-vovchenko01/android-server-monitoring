@@ -26,6 +26,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class ServerActivity extends AppCompatActivity {
+    private static int COLOR_LIGHT_YELLOW;
+    private static int COLOR_GREEN;
     Button btnOpenTerminal;
     PieChart pieChartMemory;
     public static ServerModel serverModel;
@@ -34,6 +36,8 @@ public class ServerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server);
+        COLOR_LIGHT_YELLOW = ContextCompat.getColor(getApplicationContext(), R.color.light_yellow);
+        COLOR_GREEN = ContextCompat.getColor(getApplicationContext(), R.color.pale_green);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -70,17 +74,20 @@ public class ServerActivity extends AppCompatActivity {
         float diskTotal = (float) serverModel.getDiskTotalMb();
         float cpuUsed = (float) serverModel.getCpuUsagePercent();
         float cpuTotal = 100f;
-        PieData memoryData = getPieData(
-                memoryUsed,
-                memoryTotal,
-                ContextCompat.getColor(getApplicationContext(), R.color.light_yellow),
-                ContextCompat.getColor(getApplicationContext(), R.color.pale_green)
+        updatePieChart(pieChartMemory, memoryUsed, memoryTotal, COLOR_LIGHT_YELLOW, COLOR_GREEN);
+    }
+    public void updatePieChart(PieChart pieChart, float usage, float total, int usageColor, int totalColor) {
+        PieData pieData = getPieData(
+                usage,
+                total,
+                usageColor,
+                totalColor
         );
 
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                stylePieChart(pieChartMemory, memoryData);
+                stylePieChart(pieChart, pieData);
             }
         });
     }
