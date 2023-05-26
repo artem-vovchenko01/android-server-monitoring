@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.example.servermonitor.adapter.ServerAdapter;
+import com.example.servermonitor.db.Converters;
 import com.example.servermonitor.db.ServerDatabase;
 import com.example.servermonitor.db.entity.MonitoringRecordEntity;
 import com.example.servermonitor.db.entity.ServerEntity;
@@ -24,14 +25,17 @@ import com.example.servermonitor.service.ServerService;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     private static final String DIALOG_TAG = "CreateServerDialogFragment";
+    private static final int MONITORING_INTERVAL = 7;
+    public static ServerDatabase database;
     private ServerAdapter serverAdapter;
-    private ServerDatabase database;
     RecyclerView rvServers;
     ArrayList<ServerModel> serverModels;
 
@@ -45,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
                 ServerDatabase.class,
                 "ServerDB")
                 .allowMainThreadQueries()
+                .fallbackToDestructiveMigration()
                 .build();
 
         FloatingActionButton fabAddServer = findViewById(R.id.fabAddServer);
@@ -58,12 +63,7 @@ public class MainActivity extends AppCompatActivity {
         serverAdapter = new ServerAdapter(getApplicationContext(), serverModels, this);
         rvServers.setAdapter(serverAdapter);
 
-        fabAddServer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDialog();
-            }
-        });
+        fabAddServer.setOnClickListener(v -> showDialog());
     }
 
     public void addPreviousServers(ArrayList<ServerModel> serverModels) {
@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onDialogResult(String serverName, String hostIp, int port, String userName, String password, String privateKey) {
-        ServerModel server = new ServerModel(-1, serverName, hostIp, port, userName, password, privateKey, false, 0, 0, 0, 0, 0, R.drawable.redcircle);
+        ServerModel server = new ServerModel(-1, serverName, hostIp, port, userName, password, privateKey, false, 0, 0, -1, 0, 0, R.drawable.redcircle);
         serverModels.add(server);
         database.getServerDao().addServer(ServerMapper.serverModelToEntity(server));
         serverAdapter.notifyItemInserted(serverModels.size() - 1);
@@ -111,7 +111,12 @@ public class MainActivity extends AppCompatActivity {
             serverModel.setCpuUsagePercent(monitoringRecordEntity.cpuUsagePercent);
             serverModel.setConnected(true);
             serverModel.setServerStatusImg(R.drawable.greencircle);
+            if (serverModel.getMonitoringSessionId() != -1) {
+                monitoringRecordEntity.monitoringSessionId = serverModel.getMonitoringSessionId();
+                monitoringRecordEntity.timeRecorded = Converters.dateToTimestamp(Calendar.getInstance().getTime());
+                database.getMonitoringRecordDao().addMonitoringRecord(monitoringRecordEntity);
+            }
             handler.post(() -> serverAdapter.notifyItemChanged(position));
-        }, 0, 15, TimeUnit.SECONDS);
+        }, 0, MONITORING_INTERVAL, TimeUnit.SECONDS);
     }
 }

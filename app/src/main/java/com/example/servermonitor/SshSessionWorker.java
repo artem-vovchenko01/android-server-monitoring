@@ -29,8 +29,8 @@ import java.util.ArrayList;
 public class SshSessionWorker {
     public static String MEMORY_USED_MB_COMMAND = "free -m | grep Mem | awk '{print $3}';";
     public static String MEMORY_TOTAL_MB_COMMAND = "free -m | grep Mem | awk '{print $2}';";
-    public static String DISK_USED_MB_COMMAND = "echo 0;";
-    public static String DISK_TOTAL_MB_COMMAND = "echo 0;";
+    public static String DISK_USED_MB_COMMAND = "df -mP / | tail -n -1 | awk '{print $3}';";
+    public static String DISK_TOTAL_MB_COMMAND = "df -mP / | tail -n -1 | awk '{print $2}';";
     public static String CPU_USAGE_COMMAND = "top -bn 1 | grep '%Cpu' | awk '{print $2 + $4}';";
     private static final String LOGGING_TAG = "myapp";
 
@@ -93,7 +93,7 @@ public class SshSessionWorker {
         MonitoringRecordEntity monitoringRecordEntity = new MonitoringRecordEntity();
         try {
            String[] split = output.split("\n");
-           monitoringRecordEntity.id = -1;
+           monitoringRecordEntity.id = 0;
            monitoringRecordEntity.monitoringSessionId = -1;
            monitoringRecordEntity.memoryUsedMb = Integer.parseInt(split[0]);
            monitoringRecordEntity.memoryTotalMb = Integer.parseInt(split[1]);

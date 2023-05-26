@@ -6,4 +6,5 @@
     <color name="pale_green">#66C466</color>
     <color name="terminal_font">#fff</color>
     <color name="terminal_background">#1E1E37</color>
+    <color name="main_color">#EF8011</color>
 </resources>

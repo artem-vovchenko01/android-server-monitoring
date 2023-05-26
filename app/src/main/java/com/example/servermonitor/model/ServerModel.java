@@ -15,6 +15,7 @@ public class ServerModel {
     private double diskUsedMb;
     private double diskTotalMb;
     private int serverStatusImg;
+    private int monitoringSessionId = -1;
 
     public ServerModel(int id, String name, String hostIp, int port, String userName, String password, String privateKey, boolean connected, int memoryUsedMb, int memoryTotalMb, double cpuUsagePercent, double diskUsedMb, double diskTotalMb, int serverStatusImg) {
         this.id = id;
@@ -31,6 +32,14 @@ public class ServerModel {
         this.diskUsedMb = diskUsedMb;
         this.diskTotalMb = diskTotalMb;
         this.serverStatusImg = serverStatusImg;
+    }
+
+    public int getMonitoringSessionId() {
+        return monitoringSessionId;
+    }
+
+    public void setMonitoringSessionId(int monitoringSessionId) {
+        this.monitoringSessionId = monitoringSessionId;
     }
 
     public int getId() {
