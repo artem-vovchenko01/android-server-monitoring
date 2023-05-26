@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Delete;
 import androidx.room.Room;
 import androidx.work.Data;
 
@@ -12,6 +13,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.servermonitor.adapter.ServerAdapter;
@@ -38,11 +41,14 @@ public class MainActivity extends AppCompatActivity {
     private ServerAdapter serverAdapter;
     RecyclerView rvServers;
     ArrayList<ServerModel> serverModels;
+    FloatingActionButton fabAddServer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setupUiComponents();
+        setupOnClickListeners();
 
         database = Room.databaseBuilder(
                 getApplicationContext(),
@@ -52,17 +58,20 @@ public class MainActivity extends AppCompatActivity {
                 .fallbackToDestructiveMigration()
                 .build();
 
-        FloatingActionButton fabAddServer = findViewById(R.id.fabAddServer);
-        rvServers = findViewById(R.id.rvServers);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
-        rvServers.setLayoutManager(layoutManager);
-        rvServers.setItemAnimator(new DefaultItemAnimator());
         serverModels = new ArrayList<>();
         serverModels.addAll(ServerService.mapServers(database.getServerDao().getAllServers()));
         addPreviousServers(serverModels);
         serverAdapter = new ServerAdapter(getApplicationContext(), serverModels, this);
         rvServers.setAdapter(serverAdapter);
-
+    }
+    public void setupUiComponents() {
+        fabAddServer = findViewById(R.id.fabAddServer);
+        rvServers = findViewById(R.id.rvServers);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
+        rvServers.setLayoutManager(layoutManager);
+        rvServers.setItemAnimator(new DefaultItemAnimator());
+    }
+    public void setupOnClickListeners() {
         fabAddServer.setOnClickListener(v -> showDialog());
     }
 

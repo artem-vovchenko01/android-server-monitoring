@@ -1,10 +1,12 @@
 package com.example.servermonitor.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
@@ -39,6 +41,7 @@ public class TerminalActivity extends AppCompatActivity {
     private InputStream inputStream;
     private ScrollView scrollView;
     private int currentOutputSize = 0;
+    Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +50,10 @@ public class TerminalActivity extends AppCompatActivity {
         terminalOutput = findViewById(R.id.terminalOutput);
         userInput = findViewById(R.id.userInput);
         scrollView = findViewById(R.id.terminalScrollView);
+        toolbar = findViewById(R.id.toolbar);
         jsch = new JSch();
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         connectSSH();
 
         userInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -167,6 +173,14 @@ public class TerminalActivity extends AppCompatActivity {
         }).start();
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();

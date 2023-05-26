@@ -56,7 +56,7 @@ public class SshSessionWorker {
             session.setPassword(password);
         }
         session.setConfig("StrictHostKeyChecking", "no");
-        session.setTimeout(5000);
+        session.setTimeout(10000);
         session.connect();
         return session;
     }

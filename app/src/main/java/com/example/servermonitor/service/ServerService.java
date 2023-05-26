@@ -15,5 +15,8 @@ public class ServerService {
         }
         return serverModels;
     }
+    public static void deleteServerById(int id) {
+
+    }
 
 }

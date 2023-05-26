@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -41,11 +42,12 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerView
     public void onBindViewHolder(@NonNull ServerViewHolder holder, int position) {
         ServerModel serverModel = servers.get(position);
         holder.tvServerName.setText(serverModel.getName());
-        holder.tvMemoryUsed.setText(String.valueOf(serverModel.getMemoryUsedMb()));
-        holder.tvMemoryTotal.setText(String.valueOf(serverModel.getMemoryTotalMb()));
-        holder.tvDiskUsed.setText(Double.toString(serverModel.getDiskUsedMb()));
-        holder.tvDiskTotal.setText(Double.toString(serverModel.getDiskTotalMb()));
+        holder.tvMemoryUsed.setText(String.valueOf(serverModel.getMemoryUsedMb()) + "MB");
+        holder.tvMemoryTotal.setText(String.valueOf(serverModel.getMemoryTotalMb()) + "MB");
+        holder.tvDiskUsed.setText((int)serverModel.getDiskUsedMb() + "MB");
+        holder.tvDiskTotal.setText((int)serverModel.getDiskTotalMb() + "MB");
         holder.imvServerStatus.setImageResource(serverModel.getServerStatusImg());
+        holder.tvCpuUsage.setText(serverModel.getCpuUsagePercent() + "%");
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -65,6 +67,8 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerView
     }
 
     public static class ServerViewHolder extends RecyclerView.ViewHolder {
+        public Button btnEdit;
+        public Button btnDelete;
         public TextView tvServerName;
         public TextView tvMemoryUsed;
         public TextView tvMemoryTotal;
@@ -81,6 +85,8 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerView
             tvDiskTotal = itemView.findViewById(R.id.tvDiskTotal);
             tvCpuUsage = itemView.findViewById(R.id.tvCpuUsage);
             imvServerStatus = itemView.findViewById(R.id.imvServerStatus);
+            btnEdit = itemView.findViewById(R.id.btnEdit);
+            btnDelete = itemView.findViewById(R.id.btnDelete);
         }
     }
 }

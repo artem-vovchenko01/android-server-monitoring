@@ -16,6 +16,7 @@
         >
         <Button
             android:background="@drawable/baseline_edit_24"
+            android:drawableTint="@color/main_color"
             android:id="@+id/btnEdit"
             android:layout_width="30dp"
             android:layout_height="30dp"
