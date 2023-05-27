@@ -67,8 +67,8 @@ public class ServerActivity extends AppCompatActivity {
         database = MainActivity.database;
         initializeUiComponents();
         setupOnClickListeners();
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        // setSupportActionBar(toolbar);
+        // getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         monitorServer();
     }
     public void initializeUiComponents() {

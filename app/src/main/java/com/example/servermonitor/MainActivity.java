@@ -1,6 +1,12 @@
 package com.example.servermonitor;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.NavigationUI;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -12,6 +18,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,10 +34,12 @@ import com.example.servermonitor.mapper.ServerMapper;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.service.ServerService;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.NavigableMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -38,10 +47,11 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity {
     private static final String DIALOG_TAG = "CreateServerDialogFragment";
     private static final int MONITORING_INTERVAL = 7;
+    private ActionBarDrawerToggle toggle;
     public static ServerDatabase database;
-    private ServerAdapter serverAdapter;
+    public ServerAdapter serverAdapter;
+    public ArrayList<ServerModel> serverModels;
     private ActivityMainBinding binding;
-    ArrayList<ServerModel> serverModels;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,20 +69,25 @@ public class MainActivity extends AppCompatActivity {
                 .fallbackToDestructiveMigration()
                 .build();
 
-
         serverModels = new ArrayList<>();
         serverModels.addAll(ServerService.mapServers(database.getServerDao().getAllServers()));
         addPreviousServers(serverModels);
-        serverAdapter = new ServerAdapter(getApplicationContext(), serverModels, this);
-        binding.rvServers.setAdapter(serverAdapter);
     }
     public void setupUiComponents() {
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
-        binding.rvServers.setLayoutManager(layoutManager);
-        binding.rvServers.setItemAnimator(new DefaultItemAnimator());
+        NavHostFragment navHostFragment =
+                (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.fragmentContainerView);
+
+        // Get the NavController from the NavHostFragment
+        NavController navController = navHostFragment.getNavController();
+        // NavController navController = Navigation.findNavController(this, R.id.fragmentContainerView);
+        NavigationUI.setupActionBarWithNavController(this, navController, binding.drawerLayout);
+        NavigationUI.setupWithNavController(binding.navView, navController);
+        toggle = new ActionBarDrawerToggle(this, binding.drawerLayout, R.string.open, R.string.close);
+        binding.drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
     public void setupOnClickListeners() {
-        binding.fabAddServer.setOnClickListener(v -> showDialog());
     }
 
     public void addPreviousServers(ArrayList<ServerModel> serverModels) {
@@ -104,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         executor.scheduleAtFixedRate(() -> {
             MonitoringRecordEntity monitoringRecordEntity = SshSessionWorker.monitorServer(getApplicationContext(), serverModel);
             if (monitoringRecordEntity == null) {
-                serverModel.setConnected(true);
+                serverModel.setConnected(false);
                 serverModel.setServerStatusImg(R.drawable.redcircle);
                 handler.post(() -> {
                     Toast.makeText(getApplicationContext(),
@@ -126,7 +141,33 @@ public class MainActivity extends AppCompatActivity {
                 monitoringRecordEntity.timeRecorded = Converters.dateToTimestamp(Calendar.getInstance().getTime());
                 database.getMonitoringRecordDao().addMonitoringRecord(monitoringRecordEntity);
             }
-            handler.post(() -> serverAdapter.notifyItemChanged(position));
+            handler.post(() ->
+                {
+                    if (serverAdapter != null) {
+                        serverAdapter.notifyItemChanged(position);
+                    }
+                }
+            );
         }, 0, MONITORING_INTERVAL, TimeUnit.SECONDS);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        serverModels = null;
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        NavController navController = Navigation.findNavController(this, R.id.fragmentContainerView);
+        return NavigationUI.navigateUp(navController, binding.drawerLayout);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (toggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

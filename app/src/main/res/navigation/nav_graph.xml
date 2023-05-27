@@ -3,26 +3,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
+    app:startDestination="@id/serversFragment">
 
     <fragment
-        android:id="@+id/FirstFragment"
-        android:name="com.example.servermonitor.FirstFragment"
-        android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_first">
-
+        android:id="@+id/createServerDialogFragment"
+        android:name="com.example.servermonitor.CreateServerDialogFragment"
+        android:label="CreateServerDialogFragment" />
+    <fragment
+        android:id="@+id/serversFragment"
+        android:name="com.example.servermonitor.fragment.ServersFragment"
+        android:label="fragment_servers"
+        tools:layout="@layout/fragment_servers" >
         <action
-            android:id="@+id/action_FirstFragment_to_SecondFragment"
-            app:destination="@id/SecondFragment" />
+            android:id="@+id/action_serversFragment_to_createServerDialogFragment"
+            app:destination="@id/createServerDialogFragment" />
+        <action
+            android:id="@+id/action_serversFragment_to_sshKeysFragment"
+            app:destination="@id/sshKeysFragment" />
     </fragment>
     <fragment
-        android:id="@+id/SecondFragment"
-        android:name="com.example.servermonitor.SecondFragment"
-        android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second">
-
-        <action
-            android:id="@+id/action_SecondFragment_to_FirstFragment"
-            app:destination="@id/FirstFragment" />
-    </fragment>
+        android:id="@+id/sshKeysFragment"
+        android:name="com.example.servermonitor.fragment.SshKeysFragment"
+        android:label="fragment_ssh_keys"
+        tools:layout="@layout/fragment_ssh_keys" />
 </navigation>
