@@ -18,6 +18,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.servermonitor.adapter.ServerAdapter;
+import com.example.servermonitor.databinding.ActivityMainBinding;
 import com.example.servermonitor.db.Converters;
 import com.example.servermonitor.db.ServerDatabase;
 import com.example.servermonitor.db.entity.MonitoringRecordEntity;
@@ -39,14 +40,14 @@ public class MainActivity extends AppCompatActivity {
     private static final int MONITORING_INTERVAL = 7;
     public static ServerDatabase database;
     private ServerAdapter serverAdapter;
-    RecyclerView rvServers;
+    private ActivityMainBinding binding;
     ArrayList<ServerModel> serverModels;
-    FloatingActionButton fabAddServer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         setupUiComponents();
         setupOnClickListeners();
 
@@ -58,21 +59,20 @@ public class MainActivity extends AppCompatActivity {
                 .fallbackToDestructiveMigration()
                 .build();
 
+
         serverModels = new ArrayList<>();
         serverModels.addAll(ServerService.mapServers(database.getServerDao().getAllServers()));
         addPreviousServers(serverModels);
         serverAdapter = new ServerAdapter(getApplicationContext(), serverModels, this);
-        rvServers.setAdapter(serverAdapter);
+        binding.rvServers.setAdapter(serverAdapter);
     }
     public void setupUiComponents() {
-        fabAddServer = findViewById(R.id.fabAddServer);
-        rvServers = findViewById(R.id.rvServers);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
-        rvServers.setLayoutManager(layoutManager);
-        rvServers.setItemAnimator(new DefaultItemAnimator());
+        binding.rvServers.setLayoutManager(layoutManager);
+        binding.rvServers.setItemAnimator(new DefaultItemAnimator());
     }
     public void setupOnClickListeners() {
-        fabAddServer.setOnClickListener(v -> showDialog());
+        binding.fabAddServer.setOnClickListener(v -> showDialog());
     }
 
     public void addPreviousServers(ArrayList<ServerModel> serverModels) {
@@ -90,10 +90,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onDialogResult(String serverName, String hostIp, int port, String userName, String password, String privateKey) {
-        ServerModel server = new ServerModel(-1, serverName, hostIp, port, userName, password, privateKey, false, 0, 0, -1, 0, 0, R.drawable.redcircle);
+        ServerModel server = new ServerModel(0, serverName, hostIp, port, userName, password, privateKey, false, 0, 0, -1, 0, 0, R.drawable.redcircle);
         serverModels.add(server);
         database.getServerDao().addServer(ServerMapper.serverModelToEntity(server));
-        serverAdapter.notifyItemInserted(serverModels.size() - 1);
+        //serverAdapter.notifyItemInserted(serverModels.size() - 1);
+        serverAdapter.notifyDataSetChanged();
         addWorkerForNewServer(server, serverModels.size() - 1);
     }
 

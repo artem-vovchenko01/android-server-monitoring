@@ -48,16 +48,13 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerView
         holder.tvDiskTotal.setText((int)serverModel.getDiskTotalMb() + "MB");
         holder.imvServerStatus.setImageResource(serverModel.getServerStatusImg());
         holder.tvCpuUsage.setText(serverModel.getCpuUsagePercent() + "%");
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent serverActivity = new Intent(
-                            mainActivity.getApplicationContext(),
-                            ServerActivity.class
-                        );
-                ServerActivity.serverModel = serverModel;
-                mainActivity.startActivity(serverActivity);
-            }
+        holder.itemView.setOnClickListener(v -> {
+            Intent serverActivity = new Intent(
+                        mainActivity.getApplicationContext(),
+                        ServerActivity.class
+                    );
+            ServerActivity.serverModel = serverModel;
+            mainActivity.startActivity(serverActivity);
         });
     }
 
