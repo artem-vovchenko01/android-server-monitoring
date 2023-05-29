@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -52,8 +53,9 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity {
     private static final String DIALOG_TAG = "CreateServerDialogFragment";
     private static final int MONITORING_INTERVAL = 7;
-    private ActionBarDrawerToggle toggle;
+    private int selectedItemId;
     public static ServerDatabase database;
+    public ServerService serverService;
     public ServerAdapter serverAdapter;
     public ArrayList<ServerModel> serverModels;
     private ActivityMainBinding binding;
@@ -65,18 +67,17 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         setupUiComponents();
         setupOnClickListeners();
-
         database = Room.databaseBuilder(
                 getApplicationContext(),
                 ServerDatabase.class,
                 "ServerDB")
-                .allowMainThreadQueries()
                 .fallbackToDestructiveMigration()
                 .build();
-
-        serverModels = new ArrayList<>();
-        serverModels.addAll(ServerService.mapServers(database.getServerDao().getAllServers()));
-        addPreviousServers(serverModels);
+        serverService = new ServerService(database);
+        new Thread(() -> {
+            serverModels = serverService.getAllServers();
+            addPreviousServers(serverModels);
+        }).start();
     }
     public void setupUiComponents() {
         NavHostFragment navHostFragment =
@@ -125,12 +126,7 @@ public class MainActivity extends AppCompatActivity {
             if (monitoringRecordEntity == null) {
                 serverModel.setConnected(false);
                 serverModel.setServerStatusImg(R.drawable.redcircle);
-                handler.post(() -> {
-                    Toast.makeText(getApplicationContext(),
-                        "Error occurred during fetching data from server " + serverModel.getName(),
-                        Toast.LENGTH_SHORT).show();
-                        serverAdapter.notifyItemChanged(position);
-                });
+                handler.post(() -> serverAdapter.notifyItemChanged(position));
                 return;
             }
             serverModel.setMemoryUsedMb(monitoringRecordEntity.memoryUsedMb);
@@ -160,4 +156,5 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         serverModels = null;
     }
+
 }

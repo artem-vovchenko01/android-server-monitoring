@@ -13,6 +13,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -20,6 +21,7 @@ import android.widget.TextView;
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
 import com.example.servermonitor.activity.TerminalActivity;
+import com.example.servermonitor.adapter.ServerAdapter;
 import com.example.servermonitor.databinding.FragmentServerBinding;
 import com.example.servermonitor.db.Converters;
 import com.example.servermonitor.db.ServerDatabase;
@@ -301,4 +303,6 @@ public class ServerFragment extends Fragment {
         dataSet.setValueTextSize(14f);
         return new PieData(dataSet);
     }
+
+
 }

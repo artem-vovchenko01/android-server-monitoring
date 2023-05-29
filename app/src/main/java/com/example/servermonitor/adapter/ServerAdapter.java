@@ -2,7 +2,9 @@ package com.example.servermonitor.adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -22,10 +24,11 @@ import com.example.servermonitor.model.ServerModel;
 
 import java.util.ArrayList;
 
-public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerViewHolder> {
+public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerViewHolder>  {
     private ArrayList<ServerModel> servers;
     private Context context;
     private MainActivity mainActivity;
+    public int selectedItemPosition;
 
     public ServerAdapter(Context context, ArrayList<ServerModel> servers, MainActivity mainActivity) {
         this.context = context;
@@ -55,6 +58,14 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerView
             NavController navController = Navigation.findNavController(mainActivity, R.id.navHostFragment);
             navController.navigate(R.id.action_serversFragment_to_serverFragment);
         });
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                selectedItemPosition = position;
+                return false;
+            }
+        });
+        mainActivity.registerForContextMenu(holder.itemView);
     }
 
     @Override
@@ -62,7 +73,7 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerView
         return servers.size();
     }
 
-    public static class ServerViewHolder extends RecyclerView.ViewHolder {
+    public static class ServerViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener{
         public Button btnEdit;
         public Button btnDelete;
         public TextView tvServerName;
@@ -83,6 +94,13 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerView
             imvServerStatus = itemView.findViewById(R.id.imvServerStatus);
             btnEdit = itemView.findViewById(R.id.btnEdit);
             btnDelete = itemView.findViewById(R.id.btnDelete);
+            itemView.setOnCreateContextMenuListener(this);
+        }
+
+        @Override
+        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+            menu.add("Edit");
+            menu.add("Delete");
         }
     }
 }

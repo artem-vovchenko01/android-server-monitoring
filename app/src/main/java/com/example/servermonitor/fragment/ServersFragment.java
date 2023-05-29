@@ -10,7 +10,10 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -18,11 +21,13 @@ import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
 import com.example.servermonitor.adapter.ServerAdapter;
 import com.example.servermonitor.databinding.FragmentServersBinding;
+import com.example.servermonitor.service.ServerService;
 
 public class ServersFragment extends Fragment {
     private FragmentServersBinding binding;
     private MainActivity activity;
     private Context context;
+    private ServerService serverService;
     private ServerAdapter serverAdapter;
 
     public ServersFragment() {
@@ -41,6 +46,7 @@ public class ServersFragment extends Fragment {
         binding = FragmentServersBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
         context = activity.getApplicationContext();
+        serverService = new ServerService(MainActivity.database);
         return binding.getRoot();
     }
 
@@ -51,6 +57,7 @@ public class ServersFragment extends Fragment {
         setupOnClickListeners();
         serverAdapter = new ServerAdapter(context, activity.serverModels, activity);
         activity.serverAdapter = serverAdapter;
+        registerForContextMenu(binding.rvServers);
         binding.rvServers.setAdapter(serverAdapter);
     }
 
@@ -68,5 +75,32 @@ public class ServersFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         activity.serverAdapter = null;
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        int pposition = ((ServerAdapter)binding.rvServers.getAdapter()).selectedItemPosition;
+
+        switch (item.getTitle().toString()) {
+            case "Edit":
+                // do your stuff
+                break;
+            case "Delete":
+                new Thread(() -> {
+                    serverService.deleteServer(activity.serverModels.get(pposition));
+                    activity.serverModels.remove(pposition);
+                    activity.runOnUiThread(() -> serverAdapter.notifyItemRemoved(pposition));
+                }).start();
+                break;
+        }
+        return super.onContextItemSelected(item);
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v,
+                                    ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = activity.getMenuInflater();
+        inflater.inflate(R.menu.server_context_menu, menu);
     }
 }
