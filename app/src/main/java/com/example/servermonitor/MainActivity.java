@@ -104,18 +104,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void showDialog() {
-        CreateServerDialogFragment dialogFragment = new CreateServerDialogFragment();
-        dialogFragment.show(getSupportFragmentManager(), DIALOG_TAG);
-    }
-
-    public void onDialogResult(String serverName, String hostIp, int port, String userName, String password, String privateKey) {
-        ServerModel server = new ServerModel(0, serverName, hostIp, port, userName, password, privateKey, false, 0, 0, -1, 0, 0, R.drawable.redcircle);
-        serverModels.add(server);
-        database.getServerDao().addServer(ServerMapper.serverModelToEntity(server));
-        //serverAdapter.notifyItemInserted(serverModels.size() - 1);
-        serverAdapter.notifyDataSetChanged();
-        addWorkerForNewServer(server, serverModels.size() - 1);
+    public void addNewServer(ServerModel serverModel) {
+        new Thread(() -> {
+            serverModels.add(serverModel);
+            serverService.addServer(serverModel);
+            addWorkerForNewServer(serverModel, serverModels.size() - 1);
+            runOnUiThread(() -> serverAdapter.notifyDataSetChanged());
+        }).start();
     }
 
     private void addWorkerForNewServer(ServerModel serverModel, int position) {

@@ -6,20 +6,16 @@
     app:startDestination="@id/serversFragment">
 
     <fragment
-        android:id="@+id/createServerDialogFragment"
-        android:name="com.example.servermonitor.CreateServerDialogFragment"
-        android:label="CreateServerDialogFragment" />
-    <fragment
         android:id="@+id/serversFragment"
         android:name="com.example.servermonitor.fragment.ServersFragment"
         android:label="fragment_servers"
         tools:layout="@layout/fragment_servers" >
         <action
-            android:id="@+id/action_serversFragment_to_createServerDialogFragment"
-            app:destination="@id/createServerDialogFragment" />
-        <action
             android:id="@+id/action_serversFragment_to_serverFragment"
             app:destination="@id/serverFragment" />
+        <action
+            android:id="@+id/action_serversFragment_to_editServerFragment"
+            app:destination="@id/editServerFragment" />
     </fragment>
     <fragment
         android:id="@+id/sshKeysFragment"
@@ -30,5 +26,19 @@
         android:id="@+id/serverFragment"
         android:name="com.example.servermonitor.fragment.ServerFragment"
         android:label="fragment_server"
-        tools:layout="@layout/fragment_server" />
+        tools:layout="@layout/fragment_server" >
+        <action
+            android:id="@+id/action_serverFragment_to_terminalFragment"
+            app:destination="@id/terminalFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/terminalFragment"
+        android:name="com.example.servermonitor.fragment.TerminalFragment"
+        android:label="fragment_terminal"
+        tools:layout="@layout/fragment_terminal" />
+    <fragment
+        android:id="@+id/editServerFragment"
+        android:name="com.example.servermonitor.fragment.EditServerFragment"
+        android:label="fragment_edit_server"
+        tools:layout="@layout/fragment_edit_server" />
 </navigation>

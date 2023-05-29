@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 
-import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -13,15 +12,12 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
-import com.example.servermonitor.activity.TerminalActivity;
-import com.example.servermonitor.adapter.ServerAdapter;
 import com.example.servermonitor.databinding.FragmentServerBinding;
 import com.example.servermonitor.db.Converters;
 import com.example.servermonitor.db.ServerDatabase;
@@ -82,13 +78,6 @@ public class ServerFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         database = MainActivity.database;
         setupOnClickListeners();
-        //requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
-         //   @Override
-          //  public void handleOnBackPressed() {
-           //     NavController navController = Navigation.findNavController(activity, R.id.fragmentContainerView);
-            //    navController.navigate(R.id.serversFragment);
-           // }
-        //});
     }
 
     public void setupOnClickListeners() {
@@ -103,9 +92,9 @@ public class ServerFragment extends Fragment {
         });
 
         binding.btnOpenTerminal.setOnClickListener(v -> {
-            Intent intent = new Intent(context, TerminalActivity.class);
-            TerminalActivity.serverModel = serverModel;
-            startActivity(intent);
+            TerminalFragment.serverModel = serverModel;
+            NavController controller = Navigation.findNavController(binding.getRoot());
+            controller.navigate(R.id.terminalFragment);
         });
     }
     public void updateMonitoringUiComponents() {
@@ -303,6 +292,5 @@ public class ServerFragment extends Fragment {
         dataSet.setValueTextSize(14f);
         return new PieData(dataSet);
     }
-
 
 }

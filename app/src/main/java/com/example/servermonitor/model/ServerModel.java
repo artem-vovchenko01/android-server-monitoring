@@ -1,6 +1,11 @@
 package com.example.servermonitor.model;
 
-public class ServerModel {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import androidx.annotation.NonNull;
+
+public class ServerModel implements Parcelable {
     private int id;
     private String name;
     private String hostIp;
@@ -152,5 +157,40 @@ public class ServerModel {
 
     public void setDiskTotalMb(double diskTotalMb) {
         this.diskTotalMb = diskTotalMb;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeString(hostIp);
+        dest.writeInt(port);
+        dest.writeString(userName);
+        dest.writeString(password);
+        dest.writeString(privateKey);
+    }
+
+    public static final Parcelable.Creator<ServerModel> CREATOR = new Parcelable.Creator<ServerModel>() {
+        @Override
+        public ServerModel createFromParcel(Parcel source) {
+            return new ServerModel(source);
+        }
+
+        @Override
+        public ServerModel[] newArray(int size) {
+            return new ServerModel[size];
+        }
+    };
+    private ServerModel(Parcel in) {
+        this.name = in.readString();
+        this.hostIp = in.readString();
+        this.port = in.readInt();
+        this.userName = in.readString();
+        this.password = in.readString();
+        this.privateKey = in.readString();
     }
 }

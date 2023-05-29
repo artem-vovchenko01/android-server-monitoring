@@ -1,10 +1,8 @@
 package com.example.servermonitor.adapter;
 
 import android.content.Context;
-import android.content.Intent;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -14,12 +12,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
-import androidx.navigation.ui.NavigationUI;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
-import com.example.servermonitor.activity.ServerActivity;
 import com.example.servermonitor.model.ServerModel;
 
 import java.util.ArrayList;

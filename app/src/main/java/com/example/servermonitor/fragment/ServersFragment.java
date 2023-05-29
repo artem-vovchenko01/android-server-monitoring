@@ -6,6 +6,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,6 +23,7 @@ import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
 import com.example.servermonitor.adapter.ServerAdapter;
 import com.example.servermonitor.databinding.FragmentServersBinding;
+import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.service.ServerService;
 
 public class ServersFragment extends Fragment {
@@ -47,6 +50,14 @@ public class ServersFragment extends Fragment {
         activity = (MainActivity) getActivity();
         context = activity.getApplicationContext();
         serverService = new ServerService(MainActivity.database);
+        Bundle args = getArguments();
+        if (args != null) {
+            if (args.getInt("success") == 1) {
+                ServerModel newServerModel = args.getParcelable("serverModel");
+                activity.addNewServer(newServerModel);
+            }
+            getArguments().clear();
+        }
         return binding.getRoot();
     }
 
@@ -68,7 +79,10 @@ public class ServersFragment extends Fragment {
     }
 
     public void setupOnClickListeners() {
-        //binding.fabAddServer.setOnClickListener(v -> showDialog());
+        binding.fabAddServer.setOnClickListener(v -> {
+            NavController controller = Navigation.findNavController(binding.getRoot());
+            controller.navigate(R.id.action_serversFragment_to_editServerFragment);
+        });
     }
 
     @Override
