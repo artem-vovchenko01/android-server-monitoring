@@ -1,11 +1,16 @@
 package com.example.servermonitor;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
 import androidx.navigation.NavController;
+import androidx.navigation.NavDestination;
 import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -75,17 +80,16 @@ public class MainActivity extends AppCompatActivity {
     }
     public void setupUiComponents() {
         NavHostFragment navHostFragment =
-                (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.fragmentContainerView);
+                (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.navHostFragment);
 
-        // Get the NavController from the NavHostFragment
         NavController navController = navHostFragment.getNavController();
-        // NavController navController = Navigation.findNavController(this, R.id.fragmentContainerView);
-        NavigationUI.setupActionBarWithNavController(this, navController, binding.drawerLayout);
+        AppBarConfiguration appBarConfiguration =
+                new AppBarConfiguration.Builder(R.id.serversFragment, R.id.sshKeysFragment).setDrawerLayout(binding.drawerLayout).build();
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        NavigationUI.setupWithNavController(
+                toolbar, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
-        toggle = new ActionBarDrawerToggle(this, binding.drawerLayout, R.string.open, R.string.close);
-        binding.drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
     public void setupOnClickListeners() {
     }
@@ -155,19 +159,5 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         serverModels = null;
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.fragmentContainerView);
-        return NavigationUI.navigateUp(navController, binding.drawerLayout);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (toggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 }

@@ -10,6 +10,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.NavigationUI;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.servermonitor.MainActivity;
@@ -49,12 +52,8 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerView
         holder.imvServerStatus.setImageResource(serverModel.getServerStatusImg());
         holder.tvCpuUsage.setText(serverModel.getCpuUsagePercent() + "%");
         holder.itemView.setOnClickListener(v -> {
-            Intent serverActivity = new Intent(
-                        mainActivity.getApplicationContext(),
-                        ServerActivity.class
-                    );
-            ServerActivity.serverModel = serverModel;
-            mainActivity.startActivity(serverActivity);
+            NavController navController = Navigation.findNavController(mainActivity, R.id.navHostFragment);
+            navController.navigate(R.id.action_serversFragment_to_serverFragment);
         });
     }
 

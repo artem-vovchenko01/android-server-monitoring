@@ -18,5 +18,4 @@ public class ServerService {
     public static void deleteServerById(int id) {
 
     }
-
 }

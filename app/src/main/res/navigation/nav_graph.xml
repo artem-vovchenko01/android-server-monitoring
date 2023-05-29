@@ -18,12 +18,17 @@
             android:id="@+id/action_serversFragment_to_createServerDialogFragment"
             app:destination="@id/createServerDialogFragment" />
         <action
-            android:id="@+id/action_serversFragment_to_sshKeysFragment"
-            app:destination="@id/sshKeysFragment" />
+            android:id="@+id/action_serversFragment_to_serverFragment"
+            app:destination="@id/serverFragment" />
     </fragment>
     <fragment
         android:id="@+id/sshKeysFragment"
         android:name="com.example.servermonitor.fragment.SshKeysFragment"
         android:label="fragment_ssh_keys"
         tools:layout="@layout/fragment_ssh_keys" />
+    <fragment
+        android:id="@+id/serverFragment"
+        android:name="com.example.servermonitor.fragment.ServerFragment"
+        android:label="fragment_server"
+        tools:layout="@layout/fragment_server" />
 </navigation>
