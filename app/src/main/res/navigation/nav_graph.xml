@@ -21,7 +21,11 @@
         android:id="@+id/sshKeysFragment"
         android:name="com.example.servermonitor.fragment.SshKeysFragment"
         android:label="fragment_ssh_keys"
-        tools:layout="@layout/fragment_ssh_keys" />
+        tools:layout="@layout/fragment_ssh_keys" >
+        <action
+            android:id="@+id/action_sshKeysFragment_to_editSshKeyFragment"
+            app:destination="@id/editSshKeyFragment" />
+    </fragment>
     <fragment
         android:id="@+id/serverFragment"
         android:name="com.example.servermonitor.fragment.ServerFragment"
@@ -41,4 +45,9 @@
         android:name="com.example.servermonitor.fragment.EditServerFragment"
         android:label="fragment_edit_server"
         tools:layout="@layout/fragment_edit_server" />
+    <fragment
+        android:id="@+id/editSshKeyFragment"
+        android:name="com.example.servermonitor.fragment.EditSshKeyFragment"
+        android:label="fragment_edit_ssh_key"
+        tools:layout="@layout/fragment_edit_ssh_key" />
 </navigation>

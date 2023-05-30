@@ -54,12 +54,9 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerView
             NavController navController = Navigation.findNavController(mainActivity, R.id.navHostFragment);
             navController.navigate(R.id.action_serversFragment_to_serverFragment);
         });
-        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                selectedItemPosition = position;
-                return false;
-            }
+        holder.itemView.setOnLongClickListener(v -> {
+            selectedItemPosition = position;
+            return false;
         });
         mainActivity.registerForContextMenu(holder.itemView);
     }
