@@ -1,6 +1,7 @@
 package com.example.servermonitor.adapter;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
+import com.example.servermonitor.fragment.ServerFragment;
 import com.example.servermonitor.model.ServerModel;
 
 import java.util.ArrayList;
@@ -52,7 +54,9 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerView
         holder.tvCpuUsage.setText(serverModel.getCpuUsagePercent() + "%");
         holder.itemView.setOnClickListener(v -> {
             NavController navController = Navigation.findNavController(mainActivity, R.id.navHostFragment);
-            navController.navigate(R.id.action_serversFragment_to_serverFragment);
+            Bundle fragmentData = new Bundle();
+            fragmentData.putParcelable("serverModel", servers.get(position));
+            navController.navigate(R.id.action_serversFragment_to_serverFragment, fragmentData);
         });
         holder.itemView.setOnLongClickListener(v -> {
             selectedItemPosition = position;

@@ -7,6 +7,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -24,7 +25,9 @@ import com.example.servermonitor.db.ServerDatabase;
 import com.example.servermonitor.db.entity.MonitoringRecordEntity;
 import com.example.servermonitor.db.entity.MonitoringSessionEntity;
 import com.example.servermonitor.model.ServerModel;
+import com.example.servermonitor.service.LineChartStyler;
 import com.example.servermonitor.service.MonitoringRecordService;
+import com.example.servermonitor.service.PieChartStyler;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Description;
@@ -53,6 +56,8 @@ public class ServerFragment extends Fragment {
     private Context context;
     private ServerDatabase database;
     private ServerModel serverModel;
+    private PieChartStyler pieChartStyler;
+    private LineChartStyler lineChartStyler;
 
     public ServerFragment() {
         // Required empty public constructor
@@ -70,14 +75,24 @@ public class ServerFragment extends Fragment {
         binding = FragmentServerBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
         context = activity.getApplicationContext();
+        COLOR_LIGHT_YELLOW = ContextCompat.getColor(context, R.color.light_yellow);
+        COLOR_GREEN = ContextCompat.getColor(context, R.color.pale_green);
         return binding.getRoot();
+    }
+    private void getServerModel(Bundle args) {
+        serverModel = args.getParcelable("serverModel");
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         database = MainActivity.database;
+        pieChartStyler = new PieChartStyler("used", "total", COLOR_LIGHT_YELLOW, COLOR_GREEN);
+        lineChartStyler = new LineChartStyler();
+        getServerModel(getArguments());
+        updateMonitoringUiComponents();
         setupOnClickListeners();
+        monitorServer();
     }
 
     public void setupOnClickListeners() {
@@ -137,86 +152,6 @@ public class ServerFragment extends Fragment {
             updateLineCharts();
         }, 0, CHART_REFRESH_INTERVAL, TimeUnit.SECONDS);
     }
-    public void updateLineCharts() {
-        int sessionId = serverModel.getMonitoringSessionId();
-        List<Entry> memoryEntries = null;
-        List<Entry> cpuEntries = null;
-        List<Entry> diskEntries = null;
-        ArrayList<MonitoringRecordEntity> monitoringRecords = null;
-        if (sessionId != -1) {
-            monitoringRecords = MonitoringRecordService.getMonitoringRecordsByMonitoringSessionId(database, sessionId);
-            if (monitoringRecords.size() > 0) {
-                memoryEntries = getDataForMemoryLineChart(monitoringRecords);
-                cpuEntries = getDataForCpuLineChart(monitoringRecords);
-                diskEntries = getDataForDiskLineChart(monitoringRecords);
-            }
-        }
-        List<Entry> finalMemoryEntries = memoryEntries;
-        List<Entry> finalCpuEntries = cpuEntries;
-        List<Entry> finalDiskEntries = diskEntries;
-        ArrayList<MonitoringRecordEntity> finalMonitoringRecords = monitoringRecords;
-        activity.runOnUiThread(() -> {
-            if (serverModel.getMonitoringSessionId() == -1 || finalMonitoringRecords.size() == 0) {
-                binding.lcMemory.setVisibility(View.GONE);
-                binding.lcCpu.setVisibility(View.GONE);
-                binding.lcStorage.setVisibility(View.GONE);
-            } else {
-                binding.lcMemory.setVisibility(View.VISIBLE);
-                binding.lcCpu.setVisibility(View.VISIBLE);
-                binding.lcStorage.setVisibility(View.VISIBLE);
-                configureLineChart(binding.lcMemory, finalMemoryEntries);
-                configureLineChart(binding.lcCpu, finalCpuEntries);
-                configureLineChart(binding.lcStorage, finalDiskEntries);
-            }
-        });
-    }
-    public void configureLineChart(LineChart lc, List<Entry> data) {
-        LineDataSet dataSet = new LineDataSet(data, "");
-        styleLineChartDataSet(dataSet);
-        lc.setData(new LineData(dataSet));
-        customizeLineChart(lc);
-        lc.invalidate();
-    }
-    public void customizeLineChart(LineChart lc) {
-        lc.getXAxis().setEnabled(false);
-        lc.getAxisRight().setEnabled(false);
-        Description description = new Description();
-        description.setText("Time");
-        lc.setDescription(description);
-        lc.setTouchEnabled(false);
-    }
-    public void styleLineChartDataSet(LineDataSet dataSet) {
-        dataSet.setColor(Color.BLUE);
-        dataSet.setLineWidth(2f);
-        dataSet.setCircleColor(Color.BLUE);
-        dataSet.setCircleRadius(4f);
-    }
-    public List<Entry> getDataForMemoryLineChart(ArrayList<MonitoringRecordEntity> records) {
-        List<Entry> entries = new ArrayList<>();
-        for (MonitoringRecordEntity record : records) {
-            entries.add(new Entry(getTemporarySecondsFromUnixTimestamp(record.timeRecorded), record.memoryUsedMb));
-        }
-        return entries;
-    }
-    public float getTemporarySecondsFromUnixTimestamp(long time) {
-        float newNumber =(float)( time - ((long)1672594200 * 1000) );
-        float seconds = newNumber / 1000;
-        return newNumber;
-    }
-    public List<Entry> getDataForCpuLineChart(ArrayList<MonitoringRecordEntity> records) {
-        List<Entry> entries = new ArrayList<>();
-        for (MonitoringRecordEntity record : records) {
-            entries.add(new Entry(getTemporarySecondsFromUnixTimestamp(record.timeRecorded), (float)record.cpuUsagePercent));
-        }
-        return entries;
-    }
-    public List<Entry> getDataForDiskLineChart(ArrayList<MonitoringRecordEntity> records) {
-        List<Entry> entries = new ArrayList<>();
-        for (MonitoringRecordEntity record : records) {
-            entries.add(new Entry(getTemporarySecondsFromUnixTimestamp(record.timeRecorded), (float)record.diskUsedMb));
-        }
-        return entries;
-    }
     public void updatePieCharts() {
         float memoryUsed = serverModel.getMemoryUsedMb();
         float memoryTotal = serverModel.getMemoryTotalMb();
@@ -224,73 +159,62 @@ public class ServerFragment extends Fragment {
         float diskTotal = (float) serverModel.getDiskTotalMb();
         float cpuUsed = (float) serverModel.getCpuUsagePercent();
         float cpuTotal = 100f;
-        if (memoryTotal == 0) {
-            activity.runOnUiThread(() -> {
-                binding.pcMemory.setVisibility(View.GONE);
-                binding.tvLabelMemoryNoData.setVisibility(View.VISIBLE);
-            });
+        if (memoryTotal == 0 || cpuUsed == -1 || diskTotal == 0) {
+            activity.runOnUiThread(() -> setPieChartsHidden());
         } else {
-            updatePieChart(binding.pcMemory, memoryUsed, memoryTotal, COLOR_LIGHT_YELLOW, COLOR_GREEN, binding.tvLabelMemoryNoData);
-        }
-        if (cpuUsed == -1) {
             activity.runOnUiThread(() -> {
-                binding.pcCpu.setVisibility(View.GONE);
-                binding.tvLabelCpuNoData.setVisibility(View.VISIBLE);
+                pieChartStyler.stylePieChart(binding.pcMemory, memoryUsed, memoryTotal);
+                pieChartStyler.stylePieChart(binding.pcCpu, cpuUsed, cpuTotal);
+                pieChartStyler.stylePieChart(binding.pcDisk, diskUsed, diskTotal);
+                setPieChartsVisible();
             });
-        } else {
-            updatePieChart(binding.pcCpu, cpuUsed, cpuTotal, COLOR_LIGHT_YELLOW, COLOR_GREEN, binding.tvLabelCpuNoData);
-        }
-        if (diskTotal == 0) {
-            activity.runOnUiThread(() -> {
-                binding.pcDisk.setVisibility(View.GONE);
-                binding.tvLabelDiskNoData.setVisibility(View.VISIBLE);
-            });
-        } else {
-            updatePieChart(binding.pcDisk, diskUsed, diskTotal, COLOR_LIGHT_YELLOW, COLOR_GREEN, binding.tvLabelDiskNoData);
         }
     }
-    public void updatePieChart(PieChart pieChart, float usage, float total, int usageColor, int totalColor, TextView correspondingNoDataLabel) {
-        PieData pieData = getPieData(
-                usage,
-                total,
-                usageColor,
-                totalColor
-        );
-
-        activity.runOnUiThread(() -> {
-            stylePieChart(pieChart, pieData);
-            correspondingNoDataLabel.setVisibility(View.GONE);
-            pieChart.setVisibility(View.VISIBLE);
-        });
-    }
-    public void stylePieChart(PieChart pieChart, PieData pieData) {
-        Legend legend = pieChart.getLegend();
-        legend.setForm(Legend.LegendForm.CIRCLE);
-        legend.setTextSize(14f);
-        pieChart.setData(pieData);
-        pieChart.getDescription().setEnabled(false);
-        pieChart.setDrawEntryLabels(false);
-        pieChart.setDrawCenterText(false);
-        pieChart.setHoleRadius(0f);
-        pieChart.setTransparentCircleRadius(0);
-        pieChart.setEntryLabelTextSize(14f);
-        pieChart.invalidate();
+    public void updateLineCharts() {
+        int sessionId = serverModel.getMonitoringSessionId();
+        ArrayList<MonitoringRecordEntity> monitoringRecords = new ArrayList<>(database.getMonitoringRecordDao().getAllByMonitoringSessionId(sessionId));
+        if (sessionId == -1 || monitoringRecords.size() == 0) {
+            activity.runOnUiThread(() -> setLineChartsHidden());
+        } else {
+            activity.runOnUiThread(() -> {
+                lineChartStyler.styleLineChart(binding.lcMemory, monitoringRecords, LineChartStyler.LineChartDataType.DATA_MEMORY);
+                lineChartStyler.styleLineChart(binding.lcCpu, monitoringRecords, LineChartStyler.LineChartDataType.DATA_CPU);
+                lineChartStyler.styleLineChart(binding.lcStorage, monitoringRecords, LineChartStyler.LineChartDataType.DATA_DISK);
+                setLineChartsVisible();
+            });
+        }
     }
 
-    public PieData getPieData(float usage, float total, int usageColor, int totalColor) {
-        ArrayList<PieEntry> entries = new ArrayList<>();
-        entries.add(new PieEntry(usage, "used"));
-        entries.add(new PieEntry(total - usage, "total"));
-
-        PieDataSet dataSet = new PieDataSet(entries, "");
-        dataSet.setColors(usageColor, totalColor);
-        dataSet.setDrawValues(true);
-        dataSet.setXValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
-        dataSet.setYValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
-        dataSet.setValueLinePart1Length(1f);
-        dataSet.setValueLinePart2Length(0.8f);
-        dataSet.setValueTextSize(14f);
-        return new PieData(dataSet);
+    public void setLineChartsVisible() {
+        binding.lcMemory.invalidate();
+        binding.lcCpu.invalidate();
+        binding.lcStorage.invalidate();
+        binding.lcMemory.setVisibility(View.VISIBLE);
+        binding.lcCpu.setVisibility(View.VISIBLE);
+        binding.lcStorage.setVisibility(View.VISIBLE);
     }
-
+    public void setLineChartsHidden() {
+        binding.lcMemory.setVisibility(View.GONE);
+        binding.lcCpu.setVisibility(View.GONE);
+        binding.lcStorage.setVisibility(View.GONE);
+    }
+    public void setPieChartsVisible() {
+        binding.pcMemory.invalidate();
+        binding.pcCpu.invalidate();
+        binding.pcDisk.invalidate();
+        binding.pcMemory.setVisibility(View.VISIBLE);
+        binding.tvLabelMemoryNoData.setVisibility(View.GONE);
+        binding.pcCpu.setVisibility(View.VISIBLE);
+        binding.tvLabelCpuNoData.setVisibility(View.GONE);
+        binding.pcDisk.setVisibility(View.VISIBLE);
+        binding.tvLabelDiskNoData.setVisibility(View.GONE);
+    }
+    public void setPieChartsHidden() {
+        binding.pcMemory.setVisibility(View.GONE);
+        binding.tvLabelMemoryNoData.setVisibility(View.VISIBLE);
+        binding.pcCpu.setVisibility(View.GONE);
+        binding.tvLabelCpuNoData.setVisibility(View.VISIBLE);
+        binding.pcDisk.setVisibility(View.GONE);
+        binding.tvLabelDiskNoData.setVisibility(View.VISIBLE);
+    }
 }
