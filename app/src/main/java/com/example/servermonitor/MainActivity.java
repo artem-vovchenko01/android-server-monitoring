@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
 
         NavController navController = navHostFragment.getNavController();
         AppBarConfiguration appBarConfiguration =
-                new AppBarConfiguration.Builder(R.id.serversFragment, R.id.sshKeysFragment).setDrawerLayout(binding.drawerLayout).build();
+                new AppBarConfiguration.Builder(R.id.serversFragment, R.id.sshKeysFragment, R.id.shellScriptsFragment).setDrawerLayout(binding.drawerLayout).build();
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         NavigationUI.setupWithNavController(

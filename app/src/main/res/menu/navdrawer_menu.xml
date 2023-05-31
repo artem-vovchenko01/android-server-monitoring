@@ -7,5 +7,8 @@
             <item
                 android:id="@+id/sshKeysFragment"
                 android:title="SSH keys" />
+            <item
+                android:id="@+id/shellScriptsFragment"
+                android:title="Scripts" />
         </group>
 </menu>

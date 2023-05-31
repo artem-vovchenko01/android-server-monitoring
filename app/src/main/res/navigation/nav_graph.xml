@@ -50,4 +50,18 @@
         android:name="com.example.servermonitor.fragment.EditSshKeyFragment"
         android:label="fragment_edit_ssh_key"
         tools:layout="@layout/fragment_edit_ssh_key" />
+    <fragment
+        android:id="@+id/shellScriptsFragment"
+        android:name="com.example.servermonitor.fragment.ShellScriptsFragment"
+        android:label="fragment_shell_scripts"
+        tools:layout="@layout/fragment_shell_scripts" >
+        <action
+            android:id="@+id/action_shellScriptsFragment_to_editShellScriptFragment"
+            app:destination="@id/editShellScriptFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/editShellScriptFragment"
+        android:name="com.example.servermonitor.fragment.EditShellScriptFragment"
+        android:label="fragment_edit_shell_script"
+        tools:layout="@layout/fragment_edit_shell_script" />
 </navigation>

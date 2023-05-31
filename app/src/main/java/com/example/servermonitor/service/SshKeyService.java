@@ -18,8 +18,6 @@ public class SshKeyService {
         this.sshKeyDao = database.getSshKeyDao();
     }
 
-
-
     public ArrayList<SshKeyModel> getAllSshKeys() {
         List<SshKeyEntity> sshKeyEntities = sshKeyDao.getAllSshKeys();
         ArrayList<SshKeyModel> models = new ArrayList<>();
