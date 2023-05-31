@@ -6,10 +6,18 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 
 public class SshKeyModel implements Parcelable {
+    private int id;
     private String name;
     private String keyData;
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public SshKeyModel(String name, String keyData) {
+    public SshKeyModel(int id, String name, String keyData) {
+        this.id = id;
         this.name = name;
         this.keyData = keyData;
     }
@@ -31,6 +39,7 @@ public class SshKeyModel implements Parcelable {
     }
 
     protected SshKeyModel(Parcel in) {
+        id = in.readInt();
         name = in.readString();
         keyData = in.readString();
     }
@@ -54,7 +63,14 @@ public class SshKeyModel implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        dest.writeInt(id);
         dest.writeString(name);
         dest.writeString(keyData);
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return this.name;
     }
 }

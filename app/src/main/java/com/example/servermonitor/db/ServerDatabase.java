@@ -19,7 +19,7 @@ import com.example.servermonitor.db.entity.SshKeyEntity;
         MonitoringRecordEntity.class,
         MonitoringSessionEntity.class,
         SshKeyEntity.class},
-        version = 3
+        version = 4
 )
 @TypeConverters({Converters.class})
 public abstract class ServerDatabase extends RoomDatabase {

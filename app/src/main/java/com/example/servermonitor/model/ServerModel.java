@@ -12,7 +12,6 @@ public class ServerModel implements Parcelable {
     private int port;
     private String userName;
     private String password;
-    private String privateKey;
     private boolean connected;
     private int memoryUsedMb;
     private int memoryTotalMb;
@@ -21,15 +20,25 @@ public class ServerModel implements Parcelable {
     private double diskTotalMb;
     private int serverStatusImg;
     private int monitoringSessionId = -1;
+    private int privateKeyId;
 
-    public ServerModel(int id, String name, String hostIp, int port, String userName, String password, String privateKey, boolean connected, int memoryUsedMb, int memoryTotalMb, double cpuUsagePercent, double diskUsedMb, double diskTotalMb, int serverStatusImg) {
+    public int getPrivateKeyId() {
+        return privateKeyId;
+    }
+
+    public void setPrivateKeyId(int privateKeyId) {
+        this.privateKeyId = privateKeyId;
+    }
+
+    public ServerModel() {}
+    public ServerModel(int id, String name, String hostIp, int port, String userName, String password, int privateKeyId, boolean connected, int memoryUsedMb, int memoryTotalMb, double cpuUsagePercent, double diskUsedMb, double diskTotalMb, int serverStatusImg) {
         this.id = id;
         this.name = name;
         this.hostIp = hostIp;
         this.port = port;
         this.userName = userName;
         this.password = password;
-        this.privateKey = privateKey;
+        this.privateKeyId = privateKeyId;
         this.connected = connected;
         this.memoryUsedMb = memoryUsedMb;
         this.memoryTotalMb = memoryTotalMb;
@@ -85,14 +94,6 @@ public class ServerModel implements Parcelable {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getPrivateKey() {
-        return privateKey;
-    }
-
-    public void setPrivateKey(String privateKey) {
-        this.privateKey = privateKey;
     }
 
     public int getServerStatusImg() {
@@ -171,7 +172,7 @@ public class ServerModel implements Parcelable {
         dest.writeInt(port);
         dest.writeString(userName);
         dest.writeString(password);
-        dest.writeString(privateKey);
+        dest.writeInt(privateKeyId);
     }
 
     public static final Parcelable.Creator<ServerModel> CREATOR = new Parcelable.Creator<ServerModel>() {
@@ -191,6 +192,6 @@ public class ServerModel implements Parcelable {
         this.port = in.readInt();
         this.userName = in.readString();
         this.password = in.readString();
-        this.privateKey = in.readString();
+        this.privateKeyId = in.readInt();
     }
 }

@@ -38,7 +38,9 @@ import com.example.servermonitor.db.entity.MonitoringRecordEntity;
 import com.example.servermonitor.db.entity.ServerEntity;
 import com.example.servermonitor.mapper.ServerMapper;
 import com.example.servermonitor.model.ServerModel;
+import com.example.servermonitor.model.SshKeyModel;
 import com.example.servermonitor.service.ServerService;
+import com.example.servermonitor.service.SshKeyService;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
@@ -46,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.NavigableMap;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -59,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     public ServerAdapter serverAdapter;
     public ArrayList<ServerModel> serverModels;
     private ActivityMainBinding binding;
+    private SshKeyService sshKeyService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
                 .fallbackToDestructiveMigration()
                 .build();
         serverService = new ServerService(database);
+        sshKeyService = new SshKeyService(database);
         new Thread(() -> {
             serverModels = serverService.getAllServers();
             addPreviousServers(serverModels);
@@ -117,7 +122,8 @@ public class MainActivity extends AppCompatActivity {
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         Handler handler = new Handler(Looper.getMainLooper());
         executor.scheduleAtFixedRate(() -> {
-            MonitoringRecordEntity monitoringRecordEntity = SshSessionWorker.monitorServer(getApplicationContext(), serverModel);
+            Optional<SshKeyModel> sshKeyModel = Optional.of(sshKeyService.getSshKeyById(serverModel.getPrivateKeyId()));
+            MonitoringRecordEntity monitoringRecordEntity = SshSessionWorker.monitorServer(getApplicationContext(), serverModel, sshKeyModel);
             if (monitoringRecordEntity == null) {
                 serverModel.setConnected(false);
                 serverModel.setServerStatusImg(R.drawable.redcircle);

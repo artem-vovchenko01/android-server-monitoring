@@ -14,6 +14,8 @@ import com.example.servermonitor.SshSessionWorker;
 import com.example.servermonitor.databinding.FragmentTerminalBinding;
 import com.example.servermonitor.mapper.ServerMapper;
 import com.example.servermonitor.model.ServerModel;
+import com.example.servermonitor.model.SshKeyModel;
+import com.example.servermonitor.service.SshKeyService;
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -23,12 +25,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.Optional;
 
 public class TerminalFragment extends Fragment {
     private static final int OUTPUT_SIZE_LIMIT = 100000;
     private int currentOutputSize = 0;
     private FragmentTerminalBinding binding;
     private Session session;
+    private SshKeyService sshKeyService;
     private OutputStream outputStream;
     private InputStream inputStream;
     private ChannelShell channel;
@@ -51,6 +55,7 @@ public class TerminalFragment extends Fragment {
         binding = FragmentTerminalBinding.inflate(inflater, container, false);
         jsch = new JSch();
         activity = (MainActivity) getActivity();
+        sshKeyService = new SshKeyService(MainActivity.database);
         return binding.getRoot();
     }
 
@@ -59,7 +64,8 @@ public class TerminalFragment extends Fragment {
             @Override
             public void run() {
                 try {
-                    session = SshSessionWorker.createSshSession(jsch, activity, serverModel);
+                    Optional<SshKeyModel> sshKeyModel = Optional.of(sshKeyService.getSshKeyById(serverModel.getPrivateKeyId()));
+                    session = SshSessionWorker.createSshSession(jsch, activity, serverModel, sshKeyModel);
                     channel = (ChannelShell) session.openChannel("shell");
                     outputStream = channel.getOutputStream();
                     channel.connect();

@@ -39,7 +39,7 @@ public class EditSshKeyFragment extends Fragment {
         String keyName = binding.etSshKeyName.getText().toString();
         String keyData = binding.etKeyData.getText().toString();
         Bundle bundle = new Bundle();
-        SshKeyModel model = new SshKeyModel(keyName, keyData);
+        SshKeyModel model = new SshKeyModel(0, keyName, keyData);
         bundle.putParcelable("sshKeyModel", model);
         return bundle;
     }

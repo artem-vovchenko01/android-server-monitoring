@@ -66,10 +66,21 @@ public class ServersFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         setupUiComponents();
         setupOnClickListeners();
-        serverAdapter = new ServerAdapter(context, activity.serverModels, activity);
-        activity.serverAdapter = serverAdapter;
         registerForContextMenu(binding.rvServers);
-        binding.rvServers.setAdapter(serverAdapter);
+        new Thread(() -> {
+            while (activity.serverModels == null) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            serverAdapter = new ServerAdapter(context, activity.serverModels, activity);
+            activity.serverAdapter = serverAdapter;
+            activity.runOnUiThread(() -> {
+                binding.rvServers.setAdapter(serverAdapter);
+            });
+        }).start();
     }
 
     public void setupUiComponents() {

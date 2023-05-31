@@ -12,6 +12,8 @@ import androidx.work.WorkerParameters;
 
 import com.example.servermonitor.db.entity.MonitoringRecordEntity;
 import com.example.servermonitor.model.ServerModel;
+import com.example.servermonitor.model.SshKeyModel;
+import com.example.servermonitor.service.SshKeyService;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelShell;
@@ -25,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Optional;
 
 public class SshSessionWorker {
     public static String MEMORY_USED_MB_COMMAND = "free -m | grep Mem | awk '{print $3}';";
@@ -34,18 +37,18 @@ public class SshSessionWorker {
     public static String CPU_USAGE_COMMAND = "top -bn 1 | grep '%Cpu' | awk '{print $2 + $4}';";
     private static final String LOGGING_TAG = "myapp";
 
-    public static MonitoringRecordEntity monitorServer(Context context, ServerModel serverModel) {
-        MonitoringRecordEntity result = collectMonitoringStatistics(context, serverModel);
+    public static MonitoringRecordEntity monitorServer(Context context, ServerModel serverModel, Optional<SshKeyModel> sshKeyModel) {
+        MonitoringRecordEntity result = collectMonitoringStatistics(context, serverModel, sshKeyModel);
         return result;
     }
 
-    public static Session createSshSession(JSch jsch, Context context, ServerModel serverModel) throws IOException, JSchException {
+    public static Session createSshSession(JSch jsch, Context context, ServerModel serverModel, Optional<SshKeyModel> sshKeyModel) throws IOException, JSchException {
         String user = serverModel.getUserName();
         String host = serverModel.getHostIp();
         String password = serverModel.getPassword();
-        String privateKey = serverModel.getPrivateKey();
         int port = serverModel.getPort();
-        if (privateKey != null) {
+        if (sshKeyModel.isPresent()) {
+            String privateKey = sshKeyModel.get().getKeyData();
             File tempFile = getTemporaryFile(context, privateKey);
             String privateKeyPath = tempFile.getAbsolutePath();
             jsch.addIdentity(privateKeyPath);
@@ -61,11 +64,11 @@ public class SshSessionWorker {
         return session;
     }
 
-    public static MonitoringRecordEntity collectMonitoringStatistics(Context context, ServerModel serverModel) {
+    public static MonitoringRecordEntity collectMonitoringStatistics(Context context, ServerModel serverModel, Optional<SshKeyModel> sshKeyModel) {
         String output = "";
         try {
             JSch jsch = new JSch();
-            Session session = createSshSession(jsch, context, serverModel);
+            Session session = createSshSession(jsch, context, serverModel, sshKeyModel);
             ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
             String commandList =
                     MEMORY_USED_MB_COMMAND +

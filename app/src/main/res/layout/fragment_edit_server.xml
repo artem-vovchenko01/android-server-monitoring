@@ -64,6 +64,7 @@
 
         <EditText
             android:id="@+id/etPort"
+            android:text="22"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/main_color"
@@ -116,14 +117,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/etPrivateKey"
-            app:layout_constraintBottom_toBottomOf="@+id/etPrivateKey"
+            app:layout_constraintTop_toTopOf="@+id/spinPrivateKey"
+            app:layout_constraintBottom_toBottomOf="@+id/spinPrivateKey"
             />
 
-        <EditText
-            android:inputType="textPassword"
+        <Spinner
             android:backgroundTint="@color/main_color"
-            android:id="@+id/etPrivateKey"
+            android:id="@+id/spinPrivateKey"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"

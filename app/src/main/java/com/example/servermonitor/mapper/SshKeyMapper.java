@@ -5,10 +5,10 @@ import com.example.servermonitor.model.SshKeyModel;
 
 public class SshKeyMapper {
     public static SshKeyEntity sshKeyToEntity(SshKeyModel model) {
-        return new SshKeyEntity(0, model.getName(), model.getKeyData());
+        return new SshKeyEntity(model.getId(), model.getName(), model.getKeyData());
     }
 
     public static SshKeyModel sshKeyToModel(SshKeyEntity entity) {
-        return new SshKeyModel(entity.name, entity.keyData);
+        return new SshKeyModel(entity.id, entity.name, entity.keyData);
     }
 }

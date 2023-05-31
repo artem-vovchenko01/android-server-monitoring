@@ -12,7 +12,7 @@ public class ServerMapper {
                 serverModel.getPort(),
                 serverModel.getUserName(),
                 serverModel.getPassword(),
-                serverModel.getPrivateKey()
+                serverModel.getPrivateKeyId()
         );
     }
 
@@ -24,7 +24,7 @@ public class ServerMapper {
                serverEntity.port,
                serverEntity.userName,
                serverEntity.password,
-               serverEntity.privateKey,
+               serverEntity.privateKeyId,
               false,
                 0,
                 0,

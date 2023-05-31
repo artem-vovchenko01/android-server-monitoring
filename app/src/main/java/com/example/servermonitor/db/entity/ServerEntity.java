@@ -15,19 +15,19 @@ public class ServerEntity {
     public int port;
     public String userName;
     public String password;
-    public String privateKey;
+    public int privateKeyId;
 
     public ServerEntity() {
 
     }
     @Ignore
-    public ServerEntity(int id, String name, String hostIp, int port, String userName, String password, String privateKey) {
+    public ServerEntity(int id, String name, String hostIp, int port, String userName, String password, int privateKeyId) {
         this.id = id;
         this.name = name;
         this.hostIp = hostIp;
         this.port = port;
         this.userName = userName;
         this.password = password;
-        this.privateKey = privateKey;
+        this.privateKeyId = privateKeyId;
     }
 }
