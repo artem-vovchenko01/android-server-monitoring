@@ -13,7 +13,7 @@ import java.util.List;
 @Dao
 public interface ServerDao {
     @Insert
-    void addServer(ServerEntity serverEntity);
+    long addServer(ServerEntity serverEntity);
 
     @Update
     void updateServer(ServerEntity serverEntity);

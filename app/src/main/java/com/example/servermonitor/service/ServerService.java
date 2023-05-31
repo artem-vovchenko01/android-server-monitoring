@@ -24,8 +24,11 @@ public class ServerService {
         }
         return models;
     }
-    public void addServer(ServerModel serverModel) {
-        serverDao.addServer(ServerMapper.serverModelToEntity(serverModel));
+    public long addServer(ServerModel serverModel) {
+        return serverDao.addServer(ServerMapper.serverModelToEntity(serverModel));
+    }
+    public void updateServer(ServerModel serverModel) {
+        serverDao.updateServer(ServerMapper.serverModelToEntity(serverModel));
     }
     public void deleteServerById(int id) {
         serverDao.deleteServerById(id);

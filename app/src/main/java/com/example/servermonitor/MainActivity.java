@@ -111,9 +111,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void addNewServer(ServerModel serverModel) {
         new Thread(() -> {
-            serverModels.add(serverModel);
-            serverService.addServer(serverModel);
-            addWorkerForNewServer(serverModel, serverModels.size() - 1);
+            if (serverModel.getId() != 0) {
+                serverService.updateServer(serverModel);
+            } else {
+                long id = serverService.addServer(serverModel);
+                serverModel.setId((int) id);
+                serverModels.add(serverModel);
+                addWorkerForNewServer(serverModel, serverModels.size() - 1);
+            }
             runOnUiThread(() -> serverAdapter.notifyDataSetChanged());
         }).start();
     }

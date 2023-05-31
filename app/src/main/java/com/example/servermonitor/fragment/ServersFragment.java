@@ -108,7 +108,11 @@ public class ServersFragment extends Fragment {
 
         switch (item.getTitle().toString()) {
             case "Edit":
-                // do your stuff
+                NavController controller = Navigation.findNavController(binding.getRoot());
+                Bundle bundle = new Bundle();
+                bundle.putInt("edit", 1);
+                bundle.putParcelable("serverModel", activity.serverModels.get(pposition));
+                controller.navigate(R.id.action_serversFragment_to_editServerFragment, bundle);
                 break;
             case "Delete":
                 new Thread(() -> {

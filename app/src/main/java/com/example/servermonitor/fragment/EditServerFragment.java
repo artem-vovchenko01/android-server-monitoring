@@ -95,7 +95,7 @@ public class EditServerFragment extends Fragment {
         String password = binding.etPassword.getText().toString();
         int privateKeyId = serverModel.getPrivateKeyId();
         Bundle bundle = new Bundle();
-        ServerModel serverModel = new ServerModel(0, serverName, hostIp, port, userName, password, privateKeyId, false, 0, 0, 0, 0, 0, 0);
+        ServerModel serverModel = new ServerModel(this.serverModel.getId(), serverName, hostIp, port, userName, password, privateKeyId, false, 0, 0, 0, 0, 0, 0);
         bundle.putParcelable("serverModel", serverModel);
         return bundle;
     }
@@ -107,7 +107,12 @@ public class EditServerFragment extends Fragment {
        binding.etUsername.setText(serverModel.getUserName());
        binding.etPassword.setText(serverModel.getPassword());
        Optional<SshKeyModel> sshKeyMaybe = sshKeys.stream().filter(k -> k.getId() == serverModel.getPrivateKeyId()).findFirst();
-        sshKeyMaybe.ifPresent(sshKeyModel -> binding.spinPrivateKey.setSelection(sshKeyModel.getId()));
+        sshKeyMaybe.ifPresent(sshKeyModel -> {
+            int keyId = sshKeyModel.getId();
+            sshKeys.stream().filter(k -> k.getId() == keyId).findFirst().ifPresent(k -> {
+                binding.spinPrivateKey.setSelection(sshKeys.indexOf(k));
+            });
+        });
     }
 
     @Override
