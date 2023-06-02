@@ -6,10 +6,4 @@
     <item
         android:title="Delete"
         />
-    <item
-        android:title="Reboot"
-        />
-    <item
-        android:title="Shutdown"
-        />
 </menu>

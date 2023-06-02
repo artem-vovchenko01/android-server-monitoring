@@ -54,6 +54,7 @@ public class BrowseServerFilesFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentBrowseServerFilesBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle("Filesystem");
         context = activity.getApplicationContext();
         setupListeners();
         sshKeyService = new SshKeyService(MainActivity.database);

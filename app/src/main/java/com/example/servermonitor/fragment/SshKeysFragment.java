@@ -51,6 +51,7 @@ public class SshKeysFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentSshKeysBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle("Ssh keys");
         context = activity.getApplicationContext();
         sshKeyService = new SshKeyService(MainActivity.database);
         setupUiComponents();
@@ -134,6 +135,6 @@ public class SshKeysFragment extends Fragment {
                                     ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
         MenuInflater inflater = activity.getMenuInflater();
-        inflater.inflate(R.menu.server_context_menu, menu);
+        inflater.inflate(R.menu.ssh_key_context_menu, menu);
     }
 }

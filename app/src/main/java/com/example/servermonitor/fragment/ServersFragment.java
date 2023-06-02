@@ -21,6 +21,7 @@ import android.view.ViewGroup;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
+import com.example.servermonitor.SshSessionWorker;
 import com.example.servermonitor.adapter.ServerAdapter;
 import com.example.servermonitor.databinding.FragmentServersBinding;
 import com.example.servermonitor.model.ServerModel;
@@ -48,6 +49,7 @@ public class ServersFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentServersBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle("Servers");
         context = activity.getApplicationContext();
         serverService = new ServerService(MainActivity.database);
         Bundle args = getArguments();
@@ -105,22 +107,34 @@ public class ServersFragment extends Fragment {
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         int pposition = serverAdapter.selectedItemPosition;
+        ServerModel server = activity.serverModels.get(pposition);
 
         switch (item.getTitle().toString()) {
             case "Edit":
                 NavController controller = Navigation.findNavController(binding.getRoot());
                 Bundle bundle = new Bundle();
                 bundle.putInt("edit", 1);
-                bundle.putParcelable("serverModel", activity.serverModels.get(pposition));
+                bundle.putParcelable("serverModel", server);
                 controller.navigate(R.id.action_serversFragment_to_editServerFragment, bundle);
                 break;
             case "Delete":
                 new Thread(() -> {
-                    ServerModel serverToDelete = activity.serverModels.get(pposition);
-                    serverService.deleteServer(serverToDelete);
+                    serverService.deleteServer(server);
                     activity.serverModels.remove(pposition);
-                    activity.stopJobForServer(serverToDelete);
+                    activity.stopJobForServer(server);
                     activity.runOnUiThread(() -> serverAdapter.notifyItemRemoved(pposition));
+                }).start();
+                break;
+            case "Reboot":
+                new Thread(() -> {
+                    SshSessionWorker worker = activity.serverSessions.get(server);
+                    worker.executeSingleCommand("reboot");
+                }).start();
+                break;
+            case "Shutdown":
+                new Thread(() -> {
+                    SshSessionWorker worker = activity.serverSessions.get(server);
+                    worker.executeSingleCommand("shutdown now");
                 }).start();
                 break;
         }

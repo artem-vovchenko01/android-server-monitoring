@@ -2,20 +2,31 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@drawable/server_item_border"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ImageView
+        android:id="@+id/imvKey"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/baseline_key_24"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_margin="5dp"
+        />
 
     <TextView
         android:textSize="28sp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/imvKey"
+        app:layout_constraintTop_toTopOf="@id/imvKey"
+        app:layout_constraintBottom_toBottomOf="@id/imvKey"
         app:layout_constraintEnd_toEndOf="parent"
         android:id="@+id/tvSshKeyName"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
         android:layout_marginBottom="5dp"
+        android:paddingStart="20dp"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

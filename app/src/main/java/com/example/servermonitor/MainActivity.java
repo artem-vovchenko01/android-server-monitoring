@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
     public ArrayList<ServerModel> serverModels;
     public HashMap<ServerModel, ScheduledFuture> scheduledJobs;
     public HashMap<ServerModel, ExecutorService> executors;
-    private HashMap<ServerModel, SshSessionWorker> serverSessions;
+    public HashMap<ServerModel, SshSessionWorker> serverSessions;
     private ActivityMainBinding binding;
     private SshKeyService sshKeyService;
 

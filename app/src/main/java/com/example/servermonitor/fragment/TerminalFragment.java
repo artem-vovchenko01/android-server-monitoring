@@ -53,6 +53,7 @@ public class TerminalFragment extends Fragment {
                              Bundle savedInstanceState) {
         binding = FragmentTerminalBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle("Terminal");
         context = activity.getApplicationContext();
         sshKeyService = new SshKeyService(MainActivity.database);
         binding.userInput.setActivated(true);

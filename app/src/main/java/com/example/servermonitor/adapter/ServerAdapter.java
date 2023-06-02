@@ -70,7 +70,7 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerView
         return servers.size();
     }
 
-    public static class ServerViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener{
+    public static class ServerViewHolder extends RecyclerView.ViewHolder {
         public Button btnEdit;
         public Button btnDelete;
         public TextView tvServerName;
@@ -91,13 +91,6 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerView
             imvServerStatus = itemView.findViewById(R.id.imvServerStatus);
             btnEdit = itemView.findViewById(R.id.btnEdit);
             btnDelete = itemView.findViewById(R.id.btnDelete);
-            itemView.setOnCreateContextMenuListener(this);
-        }
-
-        @Override
-        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-            menu.add("Edit");
-            menu.add("Delete");
         }
     }
 }

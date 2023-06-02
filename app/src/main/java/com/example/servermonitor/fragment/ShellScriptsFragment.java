@@ -136,6 +136,6 @@ public class ShellScriptsFragment extends Fragment {
                                     ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
         MenuInflater inflater = activity.getMenuInflater();
-        inflater.inflate(R.menu.server_context_menu, menu);
+        inflater.inflate(R.menu.shell_script_context_menu, menu);
     }
 }

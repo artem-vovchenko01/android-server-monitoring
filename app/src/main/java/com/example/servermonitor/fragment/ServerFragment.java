@@ -74,6 +74,7 @@ public class ServerFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentServerBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle("Server");
         context = activity.getApplicationContext();
         COLOR_LIGHT_YELLOW = ContextCompat.getColor(context, R.color.light_yellow);
         COLOR_GREEN = ContextCompat.getColor(context, R.color.pale_green);
