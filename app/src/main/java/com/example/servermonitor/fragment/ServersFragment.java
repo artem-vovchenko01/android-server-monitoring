@@ -104,7 +104,7 @@ public class ServersFragment extends Fragment {
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        int pposition = ((ServerAdapter)binding.rvServers.getAdapter()).selectedItemPosition;
+        int pposition = serverAdapter.selectedItemPosition;
 
         switch (item.getTitle().toString()) {
             case "Edit":
@@ -116,8 +116,10 @@ public class ServersFragment extends Fragment {
                 break;
             case "Delete":
                 new Thread(() -> {
-                    serverService.deleteServer(activity.serverModels.get(pposition));
+                    ServerModel serverToDelete = activity.serverModels.get(pposition);
+                    serverService.deleteServer(serverToDelete);
                     activity.serverModels.remove(pposition);
+                    activity.stopJobForServer(serverToDelete);
                     activity.runOnUiThread(() -> serverAdapter.notifyItemRemoved(pposition));
                 }).start();
                 break;

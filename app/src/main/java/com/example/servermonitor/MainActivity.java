@@ -1,66 +1,43 @@
 package com.example.servermonitor;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.view.GravityCompat;
 import androidx.navigation.NavController;
-import androidx.navigation.NavDestination;
-import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.room.Delete;
 import androidx.room.Room;
-import androidx.work.Data;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.view.ContextMenu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;
 
 import com.example.servermonitor.adapter.ServerAdapter;
 import com.example.servermonitor.databinding.ActivityMainBinding;
 import com.example.servermonitor.db.Converters;
 import com.example.servermonitor.db.ServerDatabase;
 import com.example.servermonitor.db.entity.MonitoringRecordEntity;
-import com.example.servermonitor.db.entity.ServerEntity;
-import com.example.servermonitor.mapper.ServerMapper;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.model.SshKeyModel;
 import com.example.servermonitor.service.ServerService;
 import com.example.servermonitor.service.SshKeyService;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.navigation.NavigationView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.NavigableMap;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     private static final int MONITORING_INTERVAL = 3;
-    private int selectedItemId;
     public static ServerDatabase database;
     public ServerService serverService;
     public ServerAdapter serverAdapter;
     public ArrayList<ServerModel> serverModels;
+    public HashMap<ServerModel, ScheduledFuture> scheduledJobs;
+    public HashMap<ServerModel, ExecutorService> executors;
     private HashMap<ServerModel, SshSessionWorker> serverSessions;
     private ActivityMainBinding binding;
     private SshKeyService sshKeyService;
@@ -81,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
         serverService = new ServerService(database);
         sshKeyService = new SshKeyService(database);
         serverSessions = new HashMap<>();
+        scheduledJobs = new HashMap<>();
+        executors = new HashMap<>();
         new Thread(() -> {
             serverModels = serverService.getAllServers();
             addPreviousServers(serverModels);
@@ -114,7 +93,12 @@ public class MainActivity extends AppCompatActivity {
     public void addNewServer(ServerModel serverModel) {
         new Thread(() -> {
             if (serverModel.getId() != 0) {
+                int pos = serverModels.indexOf(serverModels.stream().filter(m -> m.getId() == serverModel.getId()).findFirst().get());
                 serverService.updateServer(serverModel);
+                ServerModel previousServer = serverModels.get(pos);
+                stopJobForServer(previousServer);
+                serverModels.set(pos, serverModel);
+                addWorkerForNewServer(serverModel, pos);
             } else {
                 long id = serverService.addServer(serverModel);
                 serverModel.setId((int) id);
@@ -124,10 +108,18 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> serverAdapter.notifyDataSetChanged());
         }).start();
     }
+    public void stopJobForServer(ServerModel serverModel) {
+        ScheduledFuture<?> future = scheduledJobs.get(serverModel);
+        ExecutorService executor = executors.get(serverModel);
+        future.cancel(true);
+        executor.shutdown();
+        scheduledJobs.remove(serverModel);
+        executors.remove(serverModel);
+    }
 
     private void addWorkerForNewServer(ServerModel serverModel, int position) {
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        executor.scheduleAtFixedRate(() -> {
+        ScheduledFuture<?> future = executor.scheduleAtFixedRate(() -> {
             Optional<SshKeyModel> sshKeyModel = Optional.of(sshKeyService.getSshKeyById(serverModel.getPrivateKeyId()));
             SshSessionWorker worker = serverSessions.getOrDefault(serverModel, null);
             if (worker == null) {
@@ -152,6 +144,8 @@ public class MainActivity extends AppCompatActivity {
                     serverAdapter.notifyItemChanged(position);
             });
         }, 0, MONITORING_INTERVAL, TimeUnit.SECONDS);
+        scheduledJobs.put(serverModel, future);
+        executors.put(serverModel, executor);
     }
     private void updateServerModel(int position, ServerModel serverModel, MonitoringRecordEntity monitoringRecord) {
         if (monitoringRecord == null) {
