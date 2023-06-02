@@ -28,8 +28,8 @@ public class SshKeyService {
         return models;
     }
 
-    public void addSshKey(SshKeyModel sshKeyModel) {
-        sshKeyDao.addSshKey(SshKeyMapper.sshKeyToEntity(sshKeyModel));
+    public long addSshKey(SshKeyModel sshKeyModel) {
+        return sshKeyDao.addSshKey(SshKeyMapper.sshKeyToEntity(sshKeyModel));
     }
     public SshKeyModel getSshKeyById(int id) {
         return SshKeyMapper.sshKeyToModel(sshKeyDao.getSshKey(id));

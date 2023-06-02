@@ -74,12 +74,13 @@ public class SshKeysFragment extends Fragment {
     public void addNewSshKey(SshKeyModel sshKey) {
         new Thread(() -> {
             if (sshKey.getId() == 0) {
-                sshKeyService.addSshKey(sshKey);
+                int id = (int) sshKeyService.addSshKey(sshKey);
+                sshKey.setId(id);
                 sshKeys.add(sshKey);
             } else {
                 sshKeyService.updateSshKey(sshKey);
-                int position = (((SshKeysAdapter)binding.rvSshKeys.getAdapter()).selectedItemPosition);
-                sshKeys.set(position, sshKey);
+                int pos = sshKeys.indexOf(sshKeys.stream().filter(k -> k.getId() == sshKey.getId()).findFirst().get());
+                sshKeys.set(pos, sshKey);
             }
             activity.runOnUiThread(() -> {
                 adapter.notifyDataSetChanged();
@@ -107,7 +108,7 @@ public class SshKeysFragment extends Fragment {
     }
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        int pposition = ((SshKeysAdapter)binding.rvSshKeys.getAdapter()).selectedItemPosition;
+        int pposition = adapter.selectedItemPosition;
 
         switch (item.getTitle().toString()) {
             case "Edit":

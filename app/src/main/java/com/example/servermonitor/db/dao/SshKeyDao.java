@@ -13,7 +13,7 @@ import java.util.List;
 @Dao
 public interface SshKeyDao {
     @Insert
-    void addSshKey(SshKeyEntity sshKeyEntity);
+    long addSshKey(SshKeyEntity sshKeyEntity);
 
     @Update
     void updateSshKey(SshKeyEntity sshKeyEntity);
