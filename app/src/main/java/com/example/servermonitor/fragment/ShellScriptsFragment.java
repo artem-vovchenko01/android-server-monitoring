@@ -59,18 +59,17 @@ public class ShellScriptsFragment extends Fragment {
             shellScripts = shellScriptService.getAllShellScripts();
             adapter = new ShellScriptAdapter(context, shellScripts, activity);
             activity.runOnUiThread(() -> {
-                adapter.notifyDataSetChanged();
                 binding.rvShellScripts.setAdapter(adapter);
+                Bundle args = getArguments();
+                if (args != null) {
+                    if (args.getInt("success") == 1) {
+                        ShellScriptModel shellScriptModel = args.getParcelable("shellScriptModel");
+                        addNewShellScript(shellScriptModel);
+                    }
+                    getArguments().clear();
+                }
             });
         }).start();
-        Bundle args = getArguments();
-        if (args != null) {
-            if (args.getInt("success") == 1) {
-                ShellScriptModel shellScriptModel = args.getParcelable("shellScriptModel");
-                addNewShellScript(shellScriptModel);
-            }
-            getArguments().clear();
-        }
         return binding.getRoot();
     }
     public void addNewShellScript(ShellScriptModel shellScriptModel) {
@@ -80,8 +79,8 @@ public class ShellScriptsFragment extends Fragment {
                 shellScripts.add(shellScriptModel);
             } else {
                 shellScriptService.updateShellScript(shellScriptModel);
-                int position = (((ShellScriptAdapter)binding.rvShellScripts.getAdapter()).selectedItemPosition);
-                shellScripts.set(position, shellScriptModel);
+                int idx = shellScripts.indexOf(shellScripts.stream().filter(m -> m.getId() == shellScriptModel.getId()).findFirst().get());
+                shellScripts.set(idx, shellScriptModel);
             }
             activity.runOnUiThread(() -> {
                 adapter.notifyDataSetChanged();
@@ -111,21 +110,21 @@ public class ShellScriptsFragment extends Fragment {
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        int pposition = ((ShellScriptAdapter)binding.rvShellScripts.getAdapter()).selectedItemPosition;
+        int position = adapter.selectedItemPosition;
 
         switch (item.getTitle().toString()) {
             case "Edit":
                 NavController controller = Navigation.findNavController(binding.getRoot());
                 Bundle bundle = new Bundle();
                 bundle.putInt("edit", 1);
-                bundle.putParcelable("shellScriptModel", shellScripts.get(pposition));
+                bundle.putParcelable("shellScriptModel", shellScripts.get(position));
                 controller.navigate(R.id.action_shellScriptsFragment_to_editShellScriptFragment, bundle);
                 break;
             case "Delete":
                 new Thread(() -> {
-                    shellScriptService.deleteShellScript(shellScripts.get(pposition));
-                    shellScripts.remove(pposition);
-                    activity.runOnUiThread(() -> adapter.notifyItemRemoved(pposition));
+                    shellScriptService.deleteShellScript(shellScripts.get(position));
+                    shellScripts.remove(position);
+                    activity.runOnUiThread(() -> adapter.notifyItemRemoved(position));
                 }).start();
                 break;
         }

@@ -118,7 +118,8 @@ public class SshSessionWorker implements AutoCloseable {
        return monitoringRecordEntity;
     }
     public String executeShellScript(String scriptContents) {
-        String serverFileName = "/scriptToExecute.sh";
+        String homeDirPath = executeSingleCommand("pwd").replace("\n", "");
+        String serverFileName = homeDirPath + "/scriptToExecute.sh";
         putFileFromText(scriptContents, serverFileName);
         executeSingleCommand("chmod +x " + serverFileName);
         String output = executeSingleCommand(serverFileName);

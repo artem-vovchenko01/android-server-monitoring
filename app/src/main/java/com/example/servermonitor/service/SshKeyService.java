@@ -9,6 +9,7 @@ import com.example.servermonitor.model.SshKeyModel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class SshKeyService {
     private SshKeyDao sshKeyDao;
@@ -40,5 +41,13 @@ public class SshKeyService {
 
     public void updateSshKey(SshKeyModel sshKeyModel) {
         sshKeyDao.updateSshKey(SshKeyMapper.sshKeyToEntity(sshKeyModel));
+    }
+
+    public Optional<SshKeyModel> getSshKeyForServer(ServerModel serverModel) {
+        int keyId = serverModel.getPrivateKeyId();
+        if (keyId == 0)
+            return Optional.empty();
+        else
+            return Optional.of(getSshKeyById(keyId));
     }
 }

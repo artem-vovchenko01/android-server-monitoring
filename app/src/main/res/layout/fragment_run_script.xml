@@ -29,6 +29,7 @@
             android:layout_marginStart="100dp"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginBottom="10dp"
+            android:enabled="false"
             />
         <Button
             android:id="@+id/btnCencel"

@@ -1,6 +1,7 @@
 package com.example.servermonitor.adapter;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,10 +9,13 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
+import com.example.servermonitor.fragment.RunScriptFragment;
 import com.example.servermonitor.model.ShellScriptModel;
 
 import java.util.ArrayList;
@@ -21,7 +25,6 @@ public class ShellScriptAdapter extends RecyclerView.Adapter<ShellScriptAdapter.
     private Context context;
     private MainActivity activity;
     public int selectedItemPosition;
-
     public ShellScriptAdapter(Context context, ArrayList<ShellScriptModel> shellScripts, MainActivity activity) {
         this.context = context;
         this.activity = activity;
@@ -43,6 +46,12 @@ public class ShellScriptAdapter extends RecyclerView.Adapter<ShellScriptAdapter.
         holder.itemView.setOnLongClickListener((v) -> {
             selectedItemPosition = position;
             return false;
+        });
+        holder.itemView.setOnClickListener((v) -> {
+            NavController controller = Navigation.findNavController(v);
+            Bundle args = new Bundle();
+            args.putParcelable("shellScriptModel", shellScripts.get(position));
+            controller.navigate(R.id.action_shellScriptsFragment_to_runScriptFragment, args);
         });
         activity.registerForContextMenu(holder.itemView);
     }

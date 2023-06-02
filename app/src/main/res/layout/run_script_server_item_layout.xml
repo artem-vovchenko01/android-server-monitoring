@@ -13,6 +13,7 @@
         app:layout_constraintStart_toStartOf="parent"
         />
     <TextView
+        android:id="@+id/tvServerName"
         tools:text="Server Name"
         android:textSize="24sp"
         app:layout_constraintStart_toEndOf="@id/cbServerChosen"
@@ -21,5 +22,26 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="30dp"
+        />
+    <Button
+        android:id="@+id/btnShowOutput"
+        android:text="Show output"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cbServerChosen"
+        android:visibility="gone"
+        />
+    <Button
+        android:id="@+id/btnShowScriptRunning"
+        android:text="Running ..."
+        android:backgroundTint="@color/grey"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cbServerChosen"
+        android:visibility="gone"
         />
 </androidx.constraintlayout.widget.ConstraintLayout>
