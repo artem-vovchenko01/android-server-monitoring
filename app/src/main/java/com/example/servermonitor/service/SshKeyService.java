@@ -37,4 +37,8 @@ public class SshKeyService {
     public void deleteSshKey(SshKeyModel sshKey) {
         sshKeyDao.deleteSshKey(SshKeyMapper.sshKeyToEntity(sshKey));
     }
+
+    public void updateSshKey(SshKeyModel sshKeyModel) {
+        sshKeyDao.updateSshKey(SshKeyMapper.sshKeyToEntity(sshKeyModel));
+    }
 }

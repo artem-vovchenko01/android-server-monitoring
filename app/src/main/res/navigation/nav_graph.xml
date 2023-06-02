@@ -58,10 +58,17 @@
         <action
             android:id="@+id/action_shellScriptsFragment_to_editShellScriptFragment"
             app:destination="@id/editShellScriptFragment" />
+        <action
+            android:id="@+id/action_shellScriptsFragment_to_runScriptFragment"
+            app:destination="@id/runScriptFragment" />
     </fragment>
     <fragment
         android:id="@+id/editShellScriptFragment"
         android:name="com.example.servermonitor.fragment.EditShellScriptFragment"
         android:label="fragment_edit_shell_script"
         tools:layout="@layout/fragment_edit_shell_script" />
+    <fragment
+        android:id="@+id/runScriptFragment"
+        android:name="com.example.servermonitor.fragment.RunScriptFragment"
+        android:label="RunScriptFragment" />
 </navigation>

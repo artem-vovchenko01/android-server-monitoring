@@ -15,6 +15,9 @@ public class SshKeyModel implements Parcelable {
     public void setId(int id) {
         this.id = id;
     }
+    public SshKeyModel() {
+
+    }
 
     public SshKeyModel(int id, String name, String keyData) {
         this.id = id;

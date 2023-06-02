@@ -9,6 +9,9 @@ public class ShellScriptModel implements Parcelable {
     private int id;
     private String name;
     private String scriptData;
+    public ShellScriptModel() {
+
+    }
 
     public ShellScriptModel(int id, String name, String scriptData) {
         this.id = id;

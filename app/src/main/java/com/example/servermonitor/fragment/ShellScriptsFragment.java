@@ -75,8 +75,14 @@ public class ShellScriptsFragment extends Fragment {
     }
     public void addNewShellScript(ShellScriptModel shellScriptModel) {
         new Thread(() -> {
-            shellScriptService.addShellScript(shellScriptModel);
-            shellScripts.add(shellScriptModel);
+            if (shellScriptModel.getId() == 0) {
+                shellScriptService.addShellScript(shellScriptModel);
+                shellScripts.add(shellScriptModel);
+            } else {
+                shellScriptService.updateShellScript(shellScriptModel);
+                int position = (((ShellScriptAdapter)binding.rvShellScripts.getAdapter()).selectedItemPosition);
+                shellScripts.set(position, shellScriptModel);
+            }
             activity.runOnUiThread(() -> {
                 adapter.notifyDataSetChanged();
             });

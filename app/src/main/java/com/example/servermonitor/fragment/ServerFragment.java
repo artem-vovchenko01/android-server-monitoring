@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit;
 public class ServerFragment extends Fragment {
     private static int COLOR_LIGHT_YELLOW;
     private static int COLOR_GREEN;
-    private static int CHART_REFRESH_INTERVAL = 5;
+    private static int CHART_REFRESH_INTERVAL = 3;
     private FragmentServerBinding binding;
     private MainActivity activity;
     private Context context;

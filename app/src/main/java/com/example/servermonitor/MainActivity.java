@@ -47,6 +47,7 @@ import com.google.android.material.navigation.NavigationView;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -54,13 +55,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String DIALOG_TAG = "CreateServerDialogFragment";
-    private static final int MONITORING_INTERVAL = 7;
+    private static final int MONITORING_INTERVAL = 3;
     private int selectedItemId;
     public static ServerDatabase database;
     public ServerService serverService;
     public ServerAdapter serverAdapter;
     public ArrayList<ServerModel> serverModels;
+    private HashMap<ServerModel, SshSessionWorker> serverSessions;
     private ActivityMainBinding binding;
     private SshKeyService sshKeyService;
 
@@ -79,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         serverService = new ServerService(database);
         sshKeyService = new SshKeyService(database);
+        serverSessions = new HashMap<>();
         new Thread(() -> {
             serverModels = serverService.getAllServers();
             addPreviousServers(serverModels);
@@ -125,36 +127,50 @@ public class MainActivity extends AppCompatActivity {
 
     private void addWorkerForNewServer(ServerModel serverModel, int position) {
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        Handler handler = new Handler(Looper.getMainLooper());
         executor.scheduleAtFixedRate(() -> {
             Optional<SshKeyModel> sshKeyModel = Optional.of(sshKeyService.getSshKeyById(serverModel.getPrivateKeyId()));
-            MonitoringRecordEntity monitoringRecordEntity = SshSessionWorker.monitorServer(getApplicationContext(), serverModel, sshKeyModel);
-            if (monitoringRecordEntity == null) {
-                serverModel.setConnected(false);
-                serverModel.setServerStatusImg(R.drawable.redcircle);
-                handler.post(() -> serverAdapter.notifyItemChanged(position));
-                return;
-            }
-            serverModel.setMemoryUsedMb(monitoringRecordEntity.memoryUsedMb);
-            serverModel.setMemoryTotalMb(monitoringRecordEntity.memoryTotalMb);
-            serverModel.setDiskUsedMb(monitoringRecordEntity.diskUsedMb);
-            serverModel.setDiskTotalMb(monitoringRecordEntity.diskTotalMb);
-            serverModel.setCpuUsagePercent(monitoringRecordEntity.cpuUsagePercent);
-            serverModel.setConnected(true);
-            serverModel.setServerStatusImg(R.drawable.greencircle);
-            if (serverModel.getMonitoringSessionId() != -1) {
-                monitoringRecordEntity.monitoringSessionId = serverModel.getMonitoringSessionId();
-                monitoringRecordEntity.timeRecorded = Converters.dateToTimestamp(Calendar.getInstance().getTime());
-                database.getMonitoringRecordDao().addMonitoringRecord(monitoringRecordEntity);
-            }
-            handler.post(() ->
-                {
-                    if (serverAdapter != null) {
-                        serverAdapter.notifyItemChanged(position);
-                    }
+            SshSessionWorker worker = serverSessions.getOrDefault(serverModel, null);
+            if (worker == null) {
+                try {
+                    worker = new SshSessionWorker(getApplicationContext(), serverModel, sshKeyModel);
+                    serverSessions.put(serverModel, worker);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    serverModel.setConnected(false);
+                    serverModel.setServerStatusImg(R.drawable.redcircle);
+                    runOnUiThread(() -> {
+                        if (serverAdapter != null)
+                            serverAdapter.notifyItemChanged(position);
+                    });
+                    return;
                 }
-            );
+            }
+            MonitoringRecordEntity monitoringRecordEntity = worker.getMonitoringStats();
+            updateServerModel(position, serverModel, monitoringRecordEntity);
+            runOnUiThread(() -> {
+                if (serverAdapter != null)
+                    serverAdapter.notifyItemChanged(position);
+            });
         }, 0, MONITORING_INTERVAL, TimeUnit.SECONDS);
+    }
+    private void updateServerModel(int position, ServerModel serverModel, MonitoringRecordEntity monitoringRecord) {
+        if (monitoringRecord == null) {
+            serverModel.setConnected(false);
+            serverModel.setServerStatusImg(R.drawable.redcircle);
+            return;
+        }
+        serverModel.setMemoryUsedMb(monitoringRecord.memoryUsedMb);
+        serverModel.setMemoryTotalMb(monitoringRecord.memoryTotalMb);
+        serverModel.setDiskUsedMb(monitoringRecord.diskUsedMb);
+        serverModel.setDiskTotalMb(monitoringRecord.diskTotalMb);
+        serverModel.setCpuUsagePercent(monitoringRecord.cpuUsagePercent);
+        serverModel.setConnected(true);
+        serverModel.setServerStatusImg(R.drawable.greencircle);
+        if (serverModel.getMonitoringSessionId() != -1) {
+            monitoringRecord.monitoringSessionId = serverModel.getMonitoringSessionId();
+            monitoringRecord.timeRecorded = Converters.dateToTimestamp(Calendar.getInstance().getTime());
+            database.getMonitoringRecordDao().addMonitoringRecord(monitoringRecord);
+        }
     }
 
     @Override

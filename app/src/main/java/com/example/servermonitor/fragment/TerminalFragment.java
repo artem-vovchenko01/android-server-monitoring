@@ -1,5 +1,6 @@
 package com.example.servermonitor.fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -16,6 +17,7 @@ import com.example.servermonitor.mapper.ServerMapper;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.model.SshKeyModel;
 import com.example.servermonitor.service.SshKeyService;
+import com.example.servermonitor.service.SshShellSessionWorker;
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -31,14 +33,11 @@ public class TerminalFragment extends Fragment {
     private static final int OUTPUT_SIZE_LIMIT = 100000;
     private int currentOutputSize = 0;
     private FragmentTerminalBinding binding;
-    private Session session;
     private SshKeyService sshKeyService;
-    private OutputStream outputStream;
-    private InputStream inputStream;
-    private ChannelShell channel;
-    private JSch jsch;
     private MainActivity activity;
     public static ServerModel serverModel;
+    private SshShellSessionWorker shellSessionWorker;
+    private Context context;
 
     public TerminalFragment() {
         // Required empty public constructor
@@ -53,133 +52,72 @@ public class TerminalFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         binding = FragmentTerminalBinding.inflate(inflater, container, false);
-        jsch = new JSch();
         activity = (MainActivity) getActivity();
+        context = activity.getApplicationContext();
         sshKeyService = new SshKeyService(MainActivity.database);
+        binding.userInput.setActivated(true);
+        runTerminalSession();
+        setupListeners();
         return binding.getRoot();
     }
-
-    private void connectSSH() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Optional<SshKeyModel> sshKeyModel = Optional.of(sshKeyService.getSshKeyById(serverModel.getPrivateKeyId()));
-                    session = SshSessionWorker.createSshSession(jsch, activity, serverModel, sshKeyModel);
-                    channel = (ChannelShell) session.openChannel("shell");
-                    outputStream = channel.getOutputStream();
-                    channel.connect();
-                    inputStream = channel.getInputStream();
-                    try {
-                        fetchOutput();
-                        executeCommand("unset LS_COLORS; export TERM=vt220");
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            binding.userInput.setActivated(true);
-                        }
-                    });
-                } catch (JSchException | IOException e) {
-                    throw new RuntimeException(e);
-                }
+    private void setupListeners() {
+        binding.btnRunCommand.setOnClickListener((v) -> {
+            executeCommand(binding.userInput.getText().toString());
+            binding.userInput.setText("");
+        });
+    }
+    private void runTerminalSession() {
+        new Thread(() -> {
+            Optional<SshKeyModel> sshKeyModel = Optional.of(sshKeyService.getSshKeyById(serverModel.getPrivateKeyId()));
+            try {
+                shellSessionWorker = new SshShellSessionWorker(context, serverModel, sshKeyModel);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
+            fetchOutput();
         }).start();
     }
-
-    private void executeCommand(final String command) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    PrintStream printStream = new PrintStream(outputStream, true);
-                    printStream.print(command + "\n");
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            //terminalOutput.append(command + "\n");
-                        }
-                    });
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+    private void executeCommand(String command) {
+        shellSessionWorker.executeCommand(command);
     }
 
     private void fetchOutput() throws RuntimeException {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                int SIZE = 2048;
-                byte[] tmp = new byte[SIZE];
-                String result;
-                while (true) {
-                    try {
-                        inputStream = channel.getInputStream();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    try {
-                        while (true) {
-                            int i = inputStream.read(tmp, 0, SIZE);
-                            if (i < 0)
-                                break;
-                            result = new String(tmp, 0, i);
-                            String finalResult = result
-                                    .replace("\u001B[?2004l","")
-                                    .replace("\u001B[?2004h","");
-                            activity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    binding.terminalOutput.append(finalResult);
-                                    currentOutputSize += finalResult.length();
-                                    if (currentOutputSize > OUTPUT_SIZE_LIMIT) {
-                                        String text = binding.terminalOutput.getText().toString();
-                                        String newText = text.substring(text.length() -  (int)(OUTPUT_SIZE_LIMIT * 0.8));
-                                        binding.terminalOutput.setText(newText);
-                                        currentOutputSize = newText.length();
-                                    }
-                                    binding.terminalScrollView.fullScroll(View.FOCUS_DOWN);
-                                }
-                            });
-                        }
-                    } catch (IOException ignored) {}
-                    if(channel.isClosed())
-                    {
-                        // System.out.println("exit-status: " + channel.getExitStatus());
-                        break;
-                    }
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+        Thread thread = new Thread(() -> {
+            while (true) {
+                if (shellSessionWorker == null) break;
+                String result = shellSessionWorker.tryFetchNewOutput();
+                if (result != "")
+                    activity.runOnUiThread(() -> updateTerminalWithNewText(result));
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
             }
-        }).start();
+        });
+        try {
+            thread.start();
+            thread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updateTerminalWithNewText(String newPart) {
+        binding.terminalOutput.append(newPart);
+        currentOutputSize += newPart.length();
+        if (currentOutputSize > OUTPUT_SIZE_LIMIT) {
+            String text = binding.terminalOutput.getText().toString();
+            String newText = text.substring(text.length() -  (int)(OUTPUT_SIZE_LIMIT * 0.8));
+            binding.terminalOutput.setText(newText);
+            currentOutputSize = newText.length();
+        }
+        binding.terminalScrollView.fullScroll(View.FOCUS_DOWN);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (channel != null) {
-            channel.disconnect();
-        }
-        if (session != null) {
-            session.disconnect();
-        }
-        try {
-            if (outputStream != null) {
-                outputStream.close();
-            }
-            if (inputStream != null) {
-                inputStream.close();
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        shellSessionWorker = null;
     }
 }

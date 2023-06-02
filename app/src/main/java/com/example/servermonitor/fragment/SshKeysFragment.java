@@ -73,8 +73,14 @@ public class SshKeysFragment extends Fragment {
     }
     public void addNewSshKey(SshKeyModel sshKey) {
         new Thread(() -> {
-            sshKeyService.addSshKey(sshKey);
-            sshKeys.add(sshKey);
+            if (sshKey.getId() == 0) {
+                sshKeyService.addSshKey(sshKey);
+                sshKeys.add(sshKey);
+            } else {
+                sshKeyService.updateSshKey(sshKey);
+                int position = (((SshKeysAdapter)binding.rvSshKeys.getAdapter()).selectedItemPosition);
+                sshKeys.set(position, sshKey);
+            }
             activity.runOnUiThread(() -> {
                 adapter.notifyDataSetChanged();
             });

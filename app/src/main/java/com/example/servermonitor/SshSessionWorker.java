@@ -16,83 +16,90 @@ import com.example.servermonitor.model.SshKeyModel;
 import com.example.servermonitor.service.SshKeyService;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Optional;
 
-public class SshSessionWorker {
-    public static String MEMORY_USED_MB_COMMAND = "free -m | grep Mem | awk '{print $3}';";
-    public static String MEMORY_TOTAL_MB_COMMAND = "free -m | grep Mem | awk '{print $2}';";
-    public static String DISK_USED_MB_COMMAND = "df -mP / | tail -n -1 | awk '{print $3}';";
-    public static String DISK_TOTAL_MB_COMMAND = "df -mP / | tail -n -1 | awk '{print $2}';";
-    public static String CPU_USAGE_COMMAND = "top -bn 1 | grep '%Cpu' | awk '{print $2 + $4}';";
-    private static final String LOGGING_TAG = "myapp";
-
-    public static MonitoringRecordEntity monitorServer(Context context, ServerModel serverModel, Optional<SshKeyModel> sshKeyModel) {
-        MonitoringRecordEntity result = collectMonitoringStatistics(context, serverModel, sshKeyModel);
-        return result;
+public class SshSessionWorker implements AutoCloseable {
+    private static final String TAG = "sshSessionWorker";
+    private Session session;
+    private Context context;
+    private Optional<SshKeyModel> sshKey;
+    private ServerModel server;
+    private JSch jsch;
+    private ArrayList<File> tempFiles;
+    private static String MEMORY_USED_MB_COMMAND = "free -m | grep Mem | awk '{print $3}';";
+    private static String MEMORY_TOTAL_MB_COMMAND = "free -m | grep Mem | awk '{print $2}';";
+    private static String DISK_USED_MB_COMMAND = "df -mP / | tail -n -1 | awk '{print $3}';";
+    private static String DISK_TOTAL_MB_COMMAND = "df -mP / | tail -n -1 | awk '{print $2}';";
+    private static String CPU_USAGE_COMMAND = "top -bn 1 | grep '%Cpu' | awk '{print $2 + $4}';";
+    public SshSessionWorker(Context context, ServerModel server, Optional<SshKeyModel> sshKey) throws Exception {
+        this.context = context;
+        this.server = server;
+        this.sshKey = sshKey;
+        this.jsch = new JSch();
+        this.tempFiles = new ArrayList<>();
+        if (!createSshSession()) {
+            throw new Exception("Couldn't establish session with a server");
+        }
     }
 
-    public static Session createSshSession(JSch jsch, Context context, ServerModel serverModel, Optional<SshKeyModel> sshKeyModel) throws IOException, JSchException {
-        String user = serverModel.getUserName();
-        String host = serverModel.getHostIp();
-        String password = serverModel.getPassword();
-        int port = serverModel.getPort();
-        if (sshKeyModel.isPresent()) {
-            String privateKey = sshKeyModel.get().getKeyData();
-            File tempFile = getTemporaryFile(context, privateKey);
-            String privateKeyPath = tempFile.getAbsolutePath();
-            jsch.addIdentity(privateKeyPath);
-            tempFile.delete();
-        }
-        Session session = jsch.getSession(user, host, port);
-        if (password != null) {
-            session.setPassword(password);
-        }
-        session.setConfig("StrictHostKeyChecking", "no");
-        session.setTimeout(10000);
-        session.connect();
-        return session;
-    }
-
-    public static MonitoringRecordEntity collectMonitoringStatistics(Context context, ServerModel serverModel, Optional<SshKeyModel> sshKeyModel) {
-        String output = "";
+    private Boolean createSshSession() {
+        String user = server.getUserName();
+        String host = server.getHostIp();
+        String password = server.getPassword();
+        int port = server.getPort();
         try {
-            JSch jsch = new JSch();
-            Session session = createSshSession(jsch, context, serverModel, sshKeyModel);
-            ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
-            String commandList =
-                    MEMORY_USED_MB_COMMAND +
-                    MEMORY_TOTAL_MB_COMMAND +
-                    DISK_USED_MB_COMMAND +
-                    DISK_TOTAL_MB_COMMAND +
-                    CPU_USAGE_COMMAND;
-            channelExec.setCommand(commandList);
-            channelExec.connect();
-            output = readChannelOutput(channelExec);
-            channelExec.disconnect();
-        }
-        catch(JSchException e){
-            Log.d(LOGGING_TAG, "Jsch Exception occurred: " + e.getMessage());
-            Log.d(LOGGING_TAG, Log.getStackTraceString(e));
-            return null;
+            if (sshKey.isPresent()) {
+                String privateKey = sshKey.get().getKeyData();
+                File tempFile = getTemporaryFile(privateKey);
+                String privateKeyPath = tempFile.getAbsolutePath();
+                jsch.addIdentity(privateKeyPath);
+            }
+            session = jsch.getSession(user, host, port);
+            if (password != null) {
+                session.setPassword(password);
+            }
+            session.setConfig("StrictHostKeyChecking", "no");
+            session.setTimeout(10000);
+            session.connect();
+        } catch (JSchException e) {
+            e.printStackTrace();
+            Log.d(TAG, "JSch exception occurred while getting the session");
+            return false;
         } catch (IOException e) {
-            Log.d(LOGGING_TAG, "Exception occurred during process of working with private key file: " + e.getMessage());
-            Log.d(LOGGING_TAG, Log.getStackTraceString(e));
-            return null;
+            e.printStackTrace();
+            Log.d(TAG, "IO exception occurred when working with SSH key and trying to establish ssh session");
+            return false;
         }
+        return true;
+    }
+
+    public MonitoringRecordEntity getMonitoringStats() {
+        String output = "";
+        String commandList =
+                MEMORY_USED_MB_COMMAND +
+                MEMORY_TOTAL_MB_COMMAND +
+                DISK_USED_MB_COMMAND +
+                DISK_TOTAL_MB_COMMAND +
+                CPU_USAGE_COMMAND;
+        output = executeSingleCommand(commandList);
         return parseMonitoringOutput(output);
     }
-    private static MonitoringRecordEntity parseMonitoringOutput(String output) {
+    private MonitoringRecordEntity parseMonitoringOutput(String output) {
         MonitoringRecordEntity monitoringRecordEntity = new MonitoringRecordEntity();
         try {
            String[] split = output.split("\n");
@@ -104,14 +111,67 @@ public class SshSessionWorker {
            monitoringRecordEntity.diskTotalMb = Integer.parseInt(split[3]);
            monitoringRecordEntity.cpuUsagePercent = Double.parseDouble(split[4]);
        } catch (Exception e) {
-            Log.d(LOGGING_TAG, "Exception occurred while filling monitoring data from output: " + e.getMessage());
-            Log.d(LOGGING_TAG, Log.getStackTraceString(e));
+            Log.d(TAG, "Exception occurred while filling monitoring data from output: " + e.getMessage());
+            Log.d(TAG, Log.getStackTraceString(e));
            return null;
        }
        return monitoringRecordEntity;
     }
+    public String executeShellScript(String scriptContents) {
+        String serverFileName = "/scriptToExecute.sh";
+        putFileFromText(scriptContents, serverFileName);
+        executeSingleCommand("chmod +x " + serverFileName);
+        String output = executeSingleCommand(serverFileName);
+        executeSingleCommand("rm " + serverFileName);
+        return output;
+    }
+    public Boolean putFileFromText(String text, String serverPath) {
+        File file = null;
+        try {
+            file = getTemporaryFile(text);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.d(TAG, "Exception occurred when trying to place text in a temporary file");
+            return false;
+        }
+        return putFile(file, serverPath);
+    }
+    public Boolean putFile(File file, String serverPath) {
+        ChannelSftp channelSftp = null;
+        try {
+            channelSftp = (ChannelSftp) session.openChannel("sftp");
+            channelSftp.connect();
+        } catch (JSchException e) {
+            e.printStackTrace();
+            Log.d(TAG, "JSch exception during SFTP connection occurred.");
+            return false;
+        }
+        try {
+            channelSftp.put(file.getAbsolutePath(), serverPath);
+        } catch (SftpException e) {
+            e.printStackTrace();
+            Log.d(TAG, "sftp exception occurred when trying to put file to the server");
+            return false;
+        }
+        channelSftp.disconnect();
+        return true;
+    }
 
-    private static String readChannelOutput(Channel channel){
+    private String executeSingleCommand(String command) {
+        String result = "";
+        try {
+            ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
+            channelExec.setCommand(command);
+            channelExec.connect();
+            result = readChannelOutput(channelExec);
+            channelExec.disconnect();
+        } catch (JSchException e) {
+            throw new RuntimeException(e);
+        }
+        return result;
+    }
+
+    private String readChannelOutput(Channel channel){
         StringBuilder result = new StringBuilder();
         byte[] buffer = new byte[1024];
         try{
@@ -139,19 +199,28 @@ public class SshSessionWorker {
         return result.toString();
     }
 
-    private static File getTemporaryFile(Context context, String key) throws IOException {
-        File tempFile = File.createTempFile("prefix_", ".txt", context.getCacheDir());
-        writeStringToFile(tempFile, key);
+    private File getTemporaryFile(String content) throws IOException {
+        File tempFile = File.createTempFile("file_" + content.hashCode(), ".txt", context.getCacheDir());
+        writeStringToFile(tempFile, content);
+        tempFiles.add(tempFile);
         return tempFile;
     }
 
-    private static void writeStringToFile(File file, String content) {
+    private void writeStringToFile(File file, String content) {
         try {
             FileWriter writer = new FileWriter(file);
             writer.write(content);
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        session.disconnect();
+        for (File file : tempFiles) {
+            file.delete();
         }
     }
 }

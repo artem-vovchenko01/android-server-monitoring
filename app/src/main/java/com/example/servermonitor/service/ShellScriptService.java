@@ -33,6 +33,9 @@ public class ShellScriptService {
     public ShellScriptModel getShellScriptById(int id) {
         return ShellScriptMapper.shellScriptToModel(shellScriptDao.getShellScript(id));
     }
+    public void updateShellScript(ShellScriptModel shellScriptModel) {
+        shellScriptDao.updateShellScript(ShellScriptMapper.shellScriptToEntity(shellScriptModel));
+    }
 
     public void deleteShellScript(ShellScriptModel shellScriptModel) {
         shellScriptDao.deleteShellScript(ShellScriptMapper.shellScriptToEntity(shellScriptModel));
