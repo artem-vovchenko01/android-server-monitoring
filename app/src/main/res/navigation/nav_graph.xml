@@ -34,6 +34,9 @@
         <action
             android:id="@+id/action_serverFragment_to_terminalFragment"
             app:destination="@id/terminalFragment" />
+        <action
+            android:id="@+id/action_serverFragment_to_browseServerFilesFragment"
+            app:destination="@id/browseServerFilesFragment" />
     </fragment>
     <fragment
         android:id="@+id/terminalFragment"
@@ -71,4 +74,9 @@
         android:id="@+id/runScriptFragment"
         android:name="com.example.servermonitor.fragment.RunScriptFragment"
         android:label="RunScriptFragment" />
+    <fragment
+        android:id="@+id/browseServerFilesFragment"
+        android:name="com.example.servermonitor.fragment.BrowseServerFilesFragment"
+        android:label="fragment_browse_server_files"
+        tools:layout="@layout/fragment_browse_server_files" />
 </navigation>

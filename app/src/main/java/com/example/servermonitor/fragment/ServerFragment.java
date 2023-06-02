@@ -111,6 +111,13 @@ public class ServerFragment extends Fragment {
             NavController controller = Navigation.findNavController(binding.getRoot());
             controller.navigate(R.id.terminalFragment);
         });
+
+        binding.btnBrowseFiles.setOnClickListener(v -> {
+            Bundle args = new Bundle();
+            args.putParcelable("serverModel", serverModel);
+            NavController controller = Navigation.findNavController(binding.getRoot());
+            controller.navigate(R.id.browseServerFilesFragment, args);
+        });
     }
     public void updateMonitoringUiComponents() {
         if (serverModel.getMonitoringSessionId() == -1) {

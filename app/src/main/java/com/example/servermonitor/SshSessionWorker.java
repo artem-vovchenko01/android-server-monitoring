@@ -158,7 +158,7 @@ public class SshSessionWorker implements AutoCloseable {
         return true;
     }
 
-    private String executeSingleCommand(String command) {
+    public String executeSingleCommand(String command) {
         String result = "";
         try {
             ChannelExec channelExec = (ChannelExec) session.openChannel("exec");

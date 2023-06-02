@@ -3,12 +3,15 @@ package com.example.servermonitor.service;
 import android.content.Context;
 import android.util.Log;
 
+import com.example.servermonitor.fragment.BrowseServerFilesFragment;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.model.SshKeyModel;
+import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -17,13 +20,16 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.Vector;
 
 public class SshShellSessionWorker implements AutoCloseable {
     private static final String TAG = "sshSessionWorker";
     private OutputStream outputStream;
     private InputStream inputStream;
     private ChannelShell channel;
+    private ChannelSftp channelSftp;
     private Optional<SshKeyModel> sshKey;
     private ServerModel server;
     private Session session;
@@ -94,7 +100,36 @@ public class SshShellSessionWorker implements AutoCloseable {
         }
         return true;
     }
+    public Vector<ChannelSftp.LsEntry> listDir(String dir, BrowseServerFilesFragment fragment) {
+        Vector<ChannelSftp.LsEntry> lsEntries = null;
+        try {
+            if (channelSftp == null) {
+                channelSftp = (ChannelSftp) session.openChannel("sftp");
+                channelSftp.connect();
+            }
+            channelSftp.cd(dir);
+            fragment.currentPath = channelSftp.pwd();
+            lsEntries = channelSftp.ls(".");
+            lsEntries.sort(lsEntryComparator);
+        } catch(JSchException | SftpException e){
+            throw new RuntimeException(e);
+        }
+        return lsEntries;
+    }
 
+    Comparator<ChannelSftp.LsEntry> lsEntryComparator = (entry1, entry2) -> {
+        String name1 = entry1.getFilename();
+        String name2 = entry2.getFilename();
+        if (name1.equals(".") && ! name2.equals("..")) {
+            return -1;
+        } else if (name1.equals("..") && !name2.equals(".")) {
+            return -1;
+        }  else if (name1.equals("..") && name2.equals(".")) {
+            return -1;
+        } else {
+            return name1.compareToIgnoreCase(name2);
+        }
+    };
     private void establishShell() {
         try {
             channel = (ChannelShell) session.openChannel("shell");
@@ -142,6 +177,8 @@ public class SshShellSessionWorker implements AutoCloseable {
         outputStream.close();
         channel.disconnect();
         session.disconnect();
+        if (channelSftp != null)
+            channelSftp.disconnect();
         for (File file : tempFiles) {
             file.delete();
         }
