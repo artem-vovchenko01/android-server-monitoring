@@ -10,5 +10,8 @@
             <item
                 android:id="@+id/shellScriptsFragment"
                 android:title="Scripts" />
+            <item
+                android:id="@+id/alertsFragment"
+                android:title="Alerts" />
         </group>
 </menu>

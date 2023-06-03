@@ -194,4 +194,10 @@ public class ServerModel implements Parcelable {
         this.password = in.readString();
         this.privateKeyId = in.readInt();
     }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return this.name + " (" + this.hostIp + ")";
+    }
 }

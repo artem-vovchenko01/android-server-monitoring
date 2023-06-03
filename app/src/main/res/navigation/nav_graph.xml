@@ -79,4 +79,18 @@
         android:name="com.example.servermonitor.fragment.BrowseServerFilesFragment"
         android:label="fragment_browse_server_files"
         tools:layout="@layout/fragment_browse_server_files" />
+    <fragment
+        android:id="@+id/alertsFragment"
+        android:name="com.example.servermonitor.fragment.AlertsFragment"
+        android:label="fragment_alerts"
+        tools:layout="@layout/fragment_alerts" >
+        <action
+            android:id="@+id/action_alertsFragment_to_editAlertFragment"
+            app:destination="@id/editAlertFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/editAlertFragment"
+        android:name="com.example.servermonitor.fragment.EditAlertFragment"
+        android:label="fragment_edit_alert"
+        tools:layout="@layout/fragment_edit_alert" />
 </navigation>

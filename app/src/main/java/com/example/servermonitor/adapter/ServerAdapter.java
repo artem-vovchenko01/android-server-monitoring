@@ -2,7 +2,6 @@ package com.example.servermonitor.adapter;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
