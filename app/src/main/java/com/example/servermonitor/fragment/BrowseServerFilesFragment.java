@@ -3,15 +3,21 @@ package com.example.servermonitor.fragment;
 import android.content.Context;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
@@ -59,6 +65,7 @@ public class BrowseServerFilesFragment extends Fragment {
         setupListeners();
         sshKeyService = new SshKeyService(MainActivity.database);
         setLoading();
+        registerForContextMenu(binding.rvServerFiles);
         new Thread(() -> {
             Bundle args = getArguments();
             ServerModel server = args.getParcelable("serverModel");
@@ -92,6 +99,9 @@ public class BrowseServerFilesFragment extends Fragment {
         binding.btnDirectoryHome.setOnClickListener(v -> {
             goToPath(homePath);
         });
+        binding.btnRefreshDir.setOnClickListener(v -> {
+            goToPath(".");
+        });
     }
 
     private void setLoading() {
@@ -120,5 +130,35 @@ public class BrowseServerFilesFragment extends Fragment {
                 adapter.notifyDataSetChanged();
             });
         }).start();
+    }
+
+    @Override
+    public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = activity.getMenuInflater();
+        inflater.inflate(R.menu.file_context_menu, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+        int pposition = adapter.selectedItemPosition;
+        ChannelSftp.LsEntry entry = lsEntries.get(pposition);
+        switch (item.getTitle().toString()) {
+            case "Edit":
+                break;
+            case "Delete":
+                new Thread(() -> {
+                    Boolean deleted = shellSessionWorker.sftpRm(entry.getFilename());
+                    activity.runOnUiThread(() -> {
+                        if (deleted) {
+                            goToPath(".");
+                        } else {
+                            Toast.makeText(context, "Delete operation failed", Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }).start();
+                break;
+        }
+        return super.onContextItemSelected(item);
     }
 }

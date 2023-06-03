@@ -26,6 +26,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             />
+        <Button
+            android:id="@+id/btnRefreshDir"
+            android:text="REFRESH"
+            app:layout_constraintStart_toEndOf="@id/btnDirectoryHome"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvServerFiles"
         android:layout_width="0dp"

@@ -6,11 +6,13 @@ import android.util.Log;
 import com.example.servermonitor.fragment.BrowseServerFilesFragment;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.model.SshKeyModel;
+import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
 
 import java.io.File;
@@ -166,6 +168,44 @@ public class SshShellSessionWorker implements AutoCloseable {
         } catch (IOException e) {
             Log.d(TAG, "IOException");
         }
+    }
+
+    public Boolean sftpRm(String path) {
+        SftpATTRS entry = null;
+        try {
+            entry = channelSftp.stat(path);
+            if (!entry.isDir()) {
+                channelSftp.rm(path);
+                return true;
+            }
+            else {
+                channelSftp.rmdir(path);
+                return true;
+            }
+        } catch (SftpException e) {
+            if (entry.isDir()) {
+                try {
+                    String pwd = channelSftp.pwd();
+                    ChannelExec channel = (ChannelExec) session.openChannel("exec");
+                    String command = "cd " + pwd + "; " +  "rm -r " + path;
+                    channel.setCommand(command);
+                    channel.connect();
+                    for (int i = 0; i < 10; i++) {
+                        if (channel.isClosed())
+                            break;
+                        Thread.sleep(100);
+                        if (i == 9) return false;
+                    }
+                    int exitStatus = channel.getExitStatus();
+                    if (exitStatus == 0) {
+                        return true;
+                    }
+                } catch (JSchException | SftpException | InterruptedException ee) {
+                    return false;
+                }
+            }
+        }
+        return false;
     }
     @Override
     public void close() throws Exception {

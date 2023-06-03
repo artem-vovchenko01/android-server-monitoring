@@ -61,17 +61,11 @@ public class ShellScriptAdapter extends RecyclerView.Adapter<ShellScriptAdapter.
         return shellScripts.size();
     }
 
-    public static class ShellScriptViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
+    public static class ShellScriptViewHolder extends RecyclerView.ViewHolder {
         public TextView tvShellScriptName;
         public ShellScriptViewHolder(@NonNull View itemView) {
             super(itemView);
             tvShellScriptName = itemView.findViewById(R.id.tvShellScriptName);
-        }
-
-        @Override
-        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-            menu.add("Edit");
-            menu.add("Delete");
         }
     }
 }

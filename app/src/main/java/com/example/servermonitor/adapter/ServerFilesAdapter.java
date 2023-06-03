@@ -68,19 +68,13 @@ public class ServerFilesAdapter extends RecyclerView.Adapter<ServerFilesAdapter.
         return lsEntries.size();
     }
 
-    public static class ServerFilesViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
+    public static class ServerFilesViewHolder extends RecyclerView.ViewHolder {
         public TextView tvFileName;
         public ImageView fileIcon;
         public ServerFilesViewHolder(@NonNull View itemView) {
             super(itemView);
             tvFileName = itemView.findViewById(R.id.tvFileName);
             fileIcon = itemView.findViewById(R.id.fileIcon);
-        }
-
-        @Override
-        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-            menu.add("Rename");
-            menu.add("Delete");
         }
     }
 }

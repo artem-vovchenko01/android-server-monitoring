@@ -52,17 +52,11 @@ public class SshKeysAdapter extends RecyclerView.Adapter<SshKeysAdapter.SshKeysV
         return sshKeys.size();
     }
 
-    public static class SshKeysViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
+    public static class SshKeysViewHolder extends RecyclerView.ViewHolder {
         public TextView tvSshKeyName;
         public SshKeysViewHolder(@NonNull View itemView) {
             super(itemView);
             tvSshKeyName = itemView.findViewById(R.id.tvSshKeyName);
-        }
-
-        @Override
-        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-            menu.add("Edit");
-            menu.add("Delete");
         }
     }
 }
