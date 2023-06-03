@@ -90,11 +90,9 @@ public class SshShellSessionWorker implements AutoCloseable {
             session.setTimeout(10000);
             session.connect();
         } catch (JSchException e) {
-            e.printStackTrace();
             Log.d(TAG, "JSch exception occurred while getting the session");
             return false;
         } catch (IOException e) {
-            e.printStackTrace();
             Log.d(TAG, "IO exception occurred when working with SSH key and trying to establish ssh session");
             return false;
         }
@@ -139,7 +137,6 @@ public class SshShellSessionWorker implements AutoCloseable {
             outputStream = channel.getOutputStream();
             executeCommand("unset LS_COLORS; export TERM=vt220");
         } catch (JSchException | IOException e) {
-            e.printStackTrace();
             Log.d(TAG, "Exception occurred when establishing SSH shell");
         }
     }
@@ -150,7 +147,6 @@ public class SshShellSessionWorker implements AutoCloseable {
                 PrintStream printStream = new PrintStream(outputStream, true);
                 printStream.print(command + "\n");
             } catch (Exception e) {
-                e.printStackTrace();
             }
         }).start();
     }
@@ -168,7 +164,7 @@ public class SshShellSessionWorker implements AutoCloseable {
             writer.write(content);
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.d(TAG, "IOException");
         }
     }
     @Override

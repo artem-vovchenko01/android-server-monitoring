@@ -65,11 +65,9 @@ public class SshSessionWorker implements AutoCloseable {
             session.setTimeout(10000);
             session.connect();
         } catch (JSchException e) {
-            e.printStackTrace();
             Log.d(TAG, "JSch exception occurred while getting the session");
             return false;
         } catch (IOException e) {
-            e.printStackTrace();
             Log.d(TAG, "IO exception occurred when working with SSH key and trying to establish ssh session");
             return false;
         }
@@ -119,7 +117,6 @@ public class SshSessionWorker implements AutoCloseable {
         try {
             file = getTemporaryFile(text);
         } catch (IOException e) {
-            e.printStackTrace();
             Log.d(TAG, "Exception occurred when trying to place text in a temporary file");
             return false;
         }
@@ -131,14 +128,12 @@ public class SshSessionWorker implements AutoCloseable {
             channelSftp = (ChannelSftp) session.openChannel("sftp");
             channelSftp.connect();
         } catch (JSchException e) {
-            e.printStackTrace();
             Log.d(TAG, "JSch exception during SFTP connection occurred.");
             return false;
         }
         try {
             channelSftp.put(file.getAbsolutePath(), serverPath);
         } catch (SftpException e) {
-            e.printStackTrace();
             Log.d(TAG, "sftp exception occurred when trying to put file to the server");
             return false;
         }
@@ -201,7 +196,7 @@ public class SshSessionWorker implements AutoCloseable {
             writer.write(content);
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.d(TAG, "IOException");
         }
     }
 
