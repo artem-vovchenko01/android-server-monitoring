@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Environment;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -24,12 +25,21 @@ import com.example.servermonitor.R;
 import com.example.servermonitor.SshSessionWorker;
 import com.example.servermonitor.adapter.ServerFilesAdapter;
 import com.example.servermonitor.databinding.FragmentBrowseServerFilesBinding;
+import com.example.servermonitor.helper.FileLoadingProgressMonitor;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.model.SshKeyModel;
 import com.example.servermonitor.service.SshKeyService;
 import com.example.servermonitor.service.SshShellSessionWorker;
 import com.jcraft.jsch.ChannelSftp;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
 
@@ -90,9 +100,30 @@ public class BrowseServerFilesFragment extends Fragment {
                 binding.rvServerFiles.setItemAnimator(new DefaultItemAnimator());
             });
         }).start();
+        viewLocalFiles();
         return binding.getRoot();
     }
-    private void setupListeners() {
+    private void viewLocalFiles() {
+        String rootDirPath = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath();
+        File documentsDirectory = new File(rootDirPath);
+        String newDirPath = rootDirPath + "/" + "newdir" ;
+        File newdir = new File(newDirPath);
+        newdir.mkdir();
+        File[] files = documentsDirectory.listFiles();
+        File file = files[0].listFiles()[0];
+        file.mkdir();
+        try {
+            FileInputStream fileInputStream = new FileInputStream(file);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+        private void setupListeners() {
         binding.btnDirectoryRoot.setOnClickListener(v -> {
             goToPath("/");
         });
@@ -146,6 +177,27 @@ public class BrowseServerFilesFragment extends Fragment {
         switch (item.getTitle().toString()) {
             case "Edit":
                 break;
+            case "Download":
+                new Thread(() -> {
+                    List<Object> results = shellSessionWorker.downloadFile(entry.getFilename());
+                    InputStream inputStream = (InputStream) results.get(0);
+                    FileLoadingProgressMonitor monitor = (FileLoadingProgressMonitor) results.get(1);
+                    if (inputStream != null) {
+                        new Thread(() -> {
+                            try {
+                                saveFileToLocalStorage(context, inputStream, entry.getFilename());
+                                activity.runOnUiThread(() -> {
+                                    Toast.makeText(context, "Downlaod succeeded", Toast.LENGTH_LONG).show();
+                                });
+                            } catch (IOException e) {
+                                activity.runOnUiThread(() -> {
+                                    Toast.makeText(context, "Downlaod failed", Toast.LENGTH_LONG).show();
+                                });
+                            }
+                        }).start();
+                    }
+                }).start();
+                break;
             case "Delete":
                 new Thread(() -> {
                     Boolean deleted = shellSessionWorker.sftpRm(entry.getFilename());
@@ -160,5 +212,35 @@ public class BrowseServerFilesFragment extends Fragment {
                 break;
         }
         return super.onContextItemSelected(item);
+    }
+
+    public static File saveFileToLocalStorage(Context context, InputStream inputStream, String fileName) throws IOException {
+        File directory = new File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "MyAppFolder");
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        File file = new File(directory, fileName);
+
+        FileOutputStream outputStream = null;
+        try {
+            outputStream = new FileOutputStream(file);
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            outputStream.flush();
+            return file;
+        } finally {
+            if (outputStream != null) {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            inputStream.close();
+        }
     }
 }

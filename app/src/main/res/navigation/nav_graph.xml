@@ -93,4 +93,9 @@
         android:name="com.example.servermonitor.fragment.EditAlertFragment"
         android:label="fragment_edit_alert"
         tools:layout="@layout/fragment_edit_alert" />
+    <fragment
+        android:id="@+id/localFilesFragment"
+        android:name="com.example.servermonitor.fragment.LocalFilesFragment"
+        android:label="fragment_local_files"
+        tools:layout="@layout/fragment_local_files" />
 </navigation>

@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
         NavController navController = navHostFragment.getNavController();
         AppBarConfiguration appBarConfiguration =
-                new AppBarConfiguration.Builder(R.id.serversFragment, R.id.sshKeysFragment, R.id.shellScriptsFragment, R.id.alertsFragment).setDrawerLayout(binding.drawerLayout).build();
+                new AppBarConfiguration.Builder(R.id.serversFragment, R.id.sshKeysFragment, R.id.shellScriptsFragment, R.id.alertsFragment, R.id.localFilesFragment).setDrawerLayout(binding.drawerLayout).build();
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         NavigationUI.setupWithNavController(
@@ -171,5 +171,4 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         serverModels = null;
     }
-
 }

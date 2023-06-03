@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.example.servermonitor.fragment.BrowseServerFilesFragment;
+import com.example.servermonitor.helper.FileLoadingProgressMonitor;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.model.SshKeyModel;
 import com.jcraft.jsch.ChannelExec;
@@ -23,6 +24,8 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Vector;
 
@@ -206,6 +209,19 @@ public class SshShellSessionWorker implements AutoCloseable {
             }
         }
         return false;
+    }
+    public List<Object> downloadFile(String path) {
+        ArrayList<Object> results = new ArrayList<>();
+        FileLoadingProgressMonitor monitor = new FileLoadingProgressMonitor();
+        InputStream fileStream = null;
+        try {
+             fileStream = channelSftp.get(path, monitor);
+        } catch (SftpException e) {
+            throw new RuntimeException(e);
+        }
+        results.add(fileStream);
+        results.add(monitor);
+        return results;
     }
     @Override
     public void close() throws Exception {
