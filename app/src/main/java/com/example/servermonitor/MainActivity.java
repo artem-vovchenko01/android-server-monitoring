@@ -127,7 +127,6 @@ public class MainActivity extends AppCompatActivity {
                     worker = new SshSessionWorker(getApplicationContext(), serverModel, sshKeyModel);
                     serverSessions.put(serverModel, worker);
                 } catch (Exception e) {
-                    e.printStackTrace();
                     serverModel.setConnected(false);
                     serverModel.setServerStatusImg(R.drawable.redcircle);
                     runOnUiThread(() -> {
