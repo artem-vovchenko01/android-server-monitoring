@@ -9,7 +9,7 @@ public class FileLoadingProgressMonitor implements SftpProgressMonitor {
     private long totalBytes;
     private long transferredBytes;
     private double progress;;
-    private String progressPercents;
+    private String progressPercents = "0";
     private NumberFormat formatter = new DecimalFormat("#0.00");
     @Override
     public void init(int op, String src, String dest, long max) {

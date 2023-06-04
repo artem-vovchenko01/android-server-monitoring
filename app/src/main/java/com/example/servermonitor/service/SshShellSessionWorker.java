@@ -219,6 +219,18 @@ public class SshShellSessionWorker implements AutoCloseable {
         }
         return false;
     }
+    public List<Object> copyFromLocal(String localFullPath, String localFileName, String remoteDirectory) {
+        ArrayList<Object> results = new ArrayList<>();
+        FileLoadingProgressMonitor monitor = new FileLoadingProgressMonitor();
+        new Thread(() -> {
+            try {
+                channelSftp.put(localFullPath, remoteDirectory + "/" + localFileName, monitor);
+            } catch (SftpException e) {}
+        }).start();
+        results.add(true);
+        results.add(monitor);
+        return results;
+    }
     public List<Object> downloadFile(String path) {
         ArrayList<Object> results = new ArrayList<>();
         FileLoadingProgressMonitor monitor = new FileLoadingProgressMonitor();

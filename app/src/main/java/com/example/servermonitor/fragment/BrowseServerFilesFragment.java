@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -27,6 +29,7 @@ import com.example.servermonitor.SshSessionWorker;
 import com.example.servermonitor.adapter.ServerFilesAdapter;
 import com.example.servermonitor.databinding.FragmentBrowseServerFilesBinding;
 import com.example.servermonitor.helper.FileLoadingProgressMonitor;
+import com.example.servermonitor.helper.LocalFileOperations;
 import com.example.servermonitor.helper.ServerFileOperations;
 import com.example.servermonitor.helper.UiHelper;
 import com.example.servermonitor.model.ServerModel;
@@ -200,6 +203,12 @@ public class BrowseServerFilesFragment extends Fragment {
     private void showPopupMenu(View view) {
         PopupMenu popupMenu = new PopupMenu(getContext(), view);
         popupMenu.inflate(R.menu.file_browser_menu);
+        MenuItem pasteItem = popupMenu.getMenu().getItem(2);
+        if (LocalFileOperations.localFileToCopy == null) {
+            pasteItem.setEnabled(false);
+        } else {
+            pasteItem.setTitle("Paste " + LocalFileOperations.localFileToCopy.getName());
+        }
 
         popupMenu.setOnMenuItemClickListener(i -> {
             int itemId = i.getItemId();
@@ -219,8 +228,37 @@ public class BrowseServerFilesFragment extends Fragment {
                     goToPath(".");
                 }).start());
             }
-            else if (itemId == R.id.miPaste)
-                return true;
+            else if (itemId == R.id.miPaste) {
+                new Thread(() -> {
+                    List<Object> results = shellSessionWorker.copyFromLocal(LocalFileOperations.localFileToCopy.getAbsolutePath(), LocalFileOperations.localFileToCopy.getName(), currentPath);
+                    if ((boolean) results.get(0)) {
+                        FileLoadingProgressMonitor monitor = (FileLoadingProgressMonitor) results.get(1);
+                        activity.runOnUiThread(() -> {
+                            Handler progressHandler = UiHelper.showProgressDialog(getContext());
+                            new Thread(() -> {
+                                while (true) {
+                                    Message msg = Message.obtain();
+                                    msg.obj = monitor.getProgressPercents();
+                                    msg.setTarget(progressHandler);
+                                    msg.sendToTarget();
+                                    if (monitor.getProgress() == 1) break;
+                                    try {
+                                        Thread.sleep(50);
+                                    } catch (InterruptedException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+                                try {
+                                    Thread.sleep(500);
+                                } catch (InterruptedException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                goToPath(".");
+                            }).start();
+                        });
+                    }
+                }).start();
+            }
             return false;
         });
         popupMenu.show();

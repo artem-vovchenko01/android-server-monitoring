@@ -155,6 +155,9 @@ public class LocalFilesFragment extends Fragment {
         int pposition = adapter.selectedItemPosition;
         File file = files[pposition - 2];
         switch (item.getTitle().toString()) {
+            case "Copy":
+                LocalFileOperations.localFileToCopy = file;
+                break;
             case "Edit":
                 break;
             case "Rename":

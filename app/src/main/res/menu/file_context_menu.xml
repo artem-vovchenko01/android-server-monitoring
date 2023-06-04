@@ -9,4 +9,10 @@
     <item
         android:title="Delete"
         />
+    <item
+        android:title="Rename"
+        />
+    <item
+        android:title="Copy"
+        />
 </menu>

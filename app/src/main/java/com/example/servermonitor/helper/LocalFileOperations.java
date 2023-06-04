@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 
 public class LocalFileOperations {
+    public static File localFileToCopy = null;
     public static Boolean removeDirectory(File directory) {
         if (directory.isDirectory()) {
             File[] files = directory.listFiles();
