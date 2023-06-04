@@ -34,6 +34,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             />
+        <Button
+            android:id="@+id/btnMenu"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:background="@drawable/baseline_more_vert_24"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvServerFiles"
         android:layout_width="0dp"

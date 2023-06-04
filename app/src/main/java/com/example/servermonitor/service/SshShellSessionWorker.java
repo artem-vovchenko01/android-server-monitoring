@@ -173,6 +173,27 @@ public class SshShellSessionWorker implements AutoCloseable {
         }
     }
 
+    public Boolean executeSingleCommand(String command) {
+        try {
+            ChannelExec channel = (ChannelExec) session.openChannel("exec");
+            channel.setCommand(command);
+            channel.connect();
+            for (int i = 0; i < 10; i++) {
+                if (channel.isClosed())
+                    break;
+                Thread.sleep(100);
+                if (i == 9) return false;
+            }
+            int exitStatus = channel.getExitStatus();
+            if (exitStatus == 0) {
+                return true;
+            }
+        } catch (JSchException | InterruptedException ee) {
+            return false;
+        }
+        return false;
+    }
+
     public Boolean sftpRm(String path) {
         SftpATTRS entry = null;
         try {
@@ -187,24 +208,12 @@ public class SshShellSessionWorker implements AutoCloseable {
             }
         } catch (SftpException e) {
             if (entry.isDir()) {
+                String pwd = null;
                 try {
-                    String pwd = channelSftp.pwd();
-                    ChannelExec channel = (ChannelExec) session.openChannel("exec");
-                    String command = "cd " + pwd + "; " +  "rm -r " + path;
-                    channel.setCommand(command);
-                    channel.connect();
-                    for (int i = 0; i < 10; i++) {
-                        if (channel.isClosed())
-                            break;
-                        Thread.sleep(100);
-                        if (i == 9) return false;
-                    }
-                    int exitStatus = channel.getExitStatus();
-                    if (exitStatus == 0) {
-                        return true;
-                    }
-                } catch (JSchException | SftpException | InterruptedException ee) {
-                    return false;
+                    pwd = channelSftp.pwd();
+                    return executeSingleCommand("rm -r " + pwd + "/" + path);
+                } catch (SftpException ex) {
+                    throw new RuntimeException(ex);
                 }
             }
         }
@@ -222,6 +231,22 @@ public class SshShellSessionWorker implements AutoCloseable {
         results.add(fileStream);
         results.add(monitor);
         return results;
+    }
+    public Boolean mkdir(String directory) {
+        try {
+            channelSftp.mkdir(directory);
+        } catch (SftpException e) {
+            return false;
+        }
+        return true;
+    }
+    public Boolean touch(String file) {
+        try {
+            String pwd = channelSftp.pwd();
+            return executeSingleCommand("touch " + pwd + "/" + file);
+        } catch (SftpException e) {
+            return false;
+        }
     }
     @Override
     public void close() throws Exception {

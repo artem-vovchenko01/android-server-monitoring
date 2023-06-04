@@ -1,6 +1,7 @@
 package com.example.servermonitor;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
@@ -9,6 +10,8 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.room.Room;
 
 import android.os.Bundle;
+import android.view.MenuItem;
+import android.view.View;
 
 import com.example.servermonitor.adapter.ServerAdapter;
 import com.example.servermonitor.databinding.ActivityMainBinding;
@@ -20,6 +23,7 @@ import com.example.servermonitor.model.SshKeyModel;
 import com.example.servermonitor.service.ServerService;
 import com.example.servermonitor.service.SshKeyService;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -41,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     public HashMap<ServerModel, SshSessionWorker> serverSessions;
     private ActivityMainBinding binding;
     private SshKeyService sshKeyService;
+    public File fileToCopy = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -165,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
             database.getMonitoringRecordDao().addMonitoringRecord(monitoringRecord);
         }
     }
+
 
     @Override
     protected void onDestroy() {

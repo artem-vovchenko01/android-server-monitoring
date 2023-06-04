@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -26,6 +27,8 @@ import com.example.servermonitor.SshSessionWorker;
 import com.example.servermonitor.adapter.ServerFilesAdapter;
 import com.example.servermonitor.databinding.FragmentBrowseServerFilesBinding;
 import com.example.servermonitor.helper.FileLoadingProgressMonitor;
+import com.example.servermonitor.helper.ServerFileOperations;
+import com.example.servermonitor.helper.UiHelper;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.model.SshKeyModel;
 import com.example.servermonitor.service.SshKeyService;
@@ -100,28 +103,7 @@ public class BrowseServerFilesFragment extends Fragment {
                 binding.rvServerFiles.setItemAnimator(new DefaultItemAnimator());
             });
         }).start();
-        viewLocalFiles();
         return binding.getRoot();
-    }
-    private void viewLocalFiles() {
-        String rootDirPath = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath();
-        File documentsDirectory = new File(rootDirPath);
-        String newDirPath = rootDirPath + "/" + "newdir" ;
-        File newdir = new File(newDirPath);
-        newdir.mkdir();
-        File[] files = documentsDirectory.listFiles();
-        File file = files[0].listFiles()[0];
-        file.mkdir();
-        try {
-            FileInputStream fileInputStream = new FileInputStream(file);
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                System.out.println(line);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
         private void setupListeners() {
         binding.btnDirectoryRoot.setOnClickListener(v -> {
@@ -133,6 +115,7 @@ public class BrowseServerFilesFragment extends Fragment {
         binding.btnRefreshDir.setOnClickListener(v -> {
             goToPath(".");
         });
+        binding.btnMenu.setOnClickListener(this::showPopupMenu);
     }
 
     private void setLoading() {
@@ -185,7 +168,7 @@ public class BrowseServerFilesFragment extends Fragment {
                     if (inputStream != null) {
                         new Thread(() -> {
                             try {
-                                saveFileToLocalStorage(context, inputStream, entry.getFilename());
+                                ServerFileOperations.saveFileToLocalStorage(context, inputStream, entry.getFilename());
                                 activity.runOnUiThread(() -> {
                                     Toast.makeText(context, "Downlaod succeeded", Toast.LENGTH_LONG).show();
                                 });
@@ -214,33 +197,32 @@ public class BrowseServerFilesFragment extends Fragment {
         return super.onContextItemSelected(item);
     }
 
-    public static File saveFileToLocalStorage(Context context, InputStream inputStream, String fileName) throws IOException {
-        File directory = new File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "MyAppFolder");
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
+    private void showPopupMenu(View view) {
+        PopupMenu popupMenu = new PopupMenu(getContext(), view);
+        popupMenu.inflate(R.menu.file_browser_menu);
 
-        File file = new File(directory, fileName);
-
-        FileOutputStream outputStream = null;
-        try {
-            outputStream = new FileOutputStream(file);
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
+        popupMenu.setOnMenuItemClickListener(i -> {
+            int itemId = i.getItemId();
+            if (itemId == R.id.miNewDirectory) {
+                UiHelper.createDirectoryAfterDialog(getContext(), directoryName -> new Thread(() -> {
+                    if (!shellSessionWorker.mkdir(directoryName)) {
+                        activity.runOnUiThread(() -> Toast.makeText(context, "Couldn't create a directory", Toast.LENGTH_LONG).show());
+                    }
+                    goToPath(".");
+                }).start());
             }
-            outputStream.flush();
-            return file;
-        } finally {
-            if (outputStream != null) {
-                try {
-                    outputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            else if (itemId ==R.id.miNewFile) {
+                UiHelper.createFileAfterDialog(getContext(), fileName -> new Thread(() -> {
+                    if(!shellSessionWorker.touch(fileName)) {
+                        activity.runOnUiThread(() -> Toast.makeText(context, "Couldn't create a file", Toast.LENGTH_LONG).show());
+                    }
+                    goToPath(".");
+                }).start());
             }
-            inputStream.close();
-        }
+            else if (itemId == R.id.miPaste)
+                return true;
+            return false;
+        });
+        popupMenu.show();
     }
 }

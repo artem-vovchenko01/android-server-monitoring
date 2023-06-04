@@ -25,13 +25,13 @@ import android.widget.Toast;
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
 import com.example.servermonitor.adapter.LocalFilesAdapter;
-import com.example.servermonitor.databinding.FragmentBrowseServerFilesBinding;
 import com.example.servermonitor.databinding.FragmentLocalFilesBinding;
 import com.example.servermonitor.helper.LocalFileOperations;
+import com.example.servermonitor.helper.UiHelper;
 
 import java.io.File;
 import java.io.IOException;
-
+import java.util.function.Consumer;
 
 public class LocalFilesFragment extends Fragment {
     private FragmentLocalFilesBinding binding;
@@ -90,51 +90,25 @@ public class LocalFilesFragment extends Fragment {
         binding.btnRefreshDir.setOnClickListener(v -> {
             goToPath(currentDirectory);
         });
-        binding.btnCreateFile.setOnClickListener(v -> {
-            View dialogView = LayoutInflater.from(context).inflate(R.layout.single_string_dialog_layout, null);
-            askStringInput(dialogView, "File name", (dialog, which) -> {
-                EditText inputField = dialogView.findViewById(R.id.editText);
-                String fileName = inputField.getText().toString();
-                if (! LocalFileOperations.verifyFilename(fileName)) {
-                    Toast.makeText(context, "Invalid filename", Toast.LENGTH_LONG).show();
-                    return;
-                }
-                File newFile = new File(currentPath + "/" + fileName);
-                try {
-                    newFile.createNewFile();
-                    goToPath(currentDirectory);
-                } catch (IOException e) {
-                    Toast.makeText(context, "Failed creating file.", Toast.LENGTH_LONG).show();
-                }
-            });
-        });
-        binding.btnCreateDirectory.setOnClickListener(v -> {
-            View dialogView = LayoutInflater.from(context).inflate(R.layout.single_string_dialog_layout, null);
-            askStringInput(dialogView, "Directory name", (dialog, which) -> {
-                EditText inputField = dialogView.findViewById(R.id.editText);
-                String directoryName = inputField.getText().toString();
-                if (! LocalFileOperations.verifyFilename(directoryName)) {
-                    Toast.makeText(context, "Invalid directory name", Toast.LENGTH_LONG).show();
-                    return;
-                }
-                File newFile = new File(currentPath + "/" + directoryName);
-                boolean success = newFile.mkdir();
-                goToPath(currentDirectory);
-                if (!success)
-                    Toast.makeText(context, "Failed creating directory.", Toast.LENGTH_LONG).show();
-            });
-        });
-    }
-
-    private void askStringInput(View dialogView, String title, DialogInterface.OnClickListener listener) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setView(dialogView)
-                .setTitle(title)
-                .setPositiveButton("OK", listener)
-                .setNegativeButton("Cancel", null);
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
+        binding.btnCreateFile.setOnClickListener(v -> UiHelper.createFileAfterDialog(getContext(), fileName -> {
+            File newFile = new File(currentPath + "/" + fileName);
+            boolean success = true;
+            try {
+                success = newFile.createNewFile();
+            } catch (IOException e) {
+                success = false;
+            }
+            if (! success)
+                Toast.makeText(context, "Failed creating file.", Toast.LENGTH_LONG).show();
+            goToPath(currentDirectory);
+        }));
+        binding.btnCreateDirectory.setOnClickListener(v -> UiHelper.createDirectoryAfterDialog(getContext(), directoryName -> {
+            File newFile = new File(currentPath + "/" + directoryName);
+            boolean success = newFile.mkdir();
+            goToPath(currentDirectory);
+            if (!success)
+                Toast.makeText(context, "Failed creating directory.", Toast.LENGTH_LONG).show();
+        }));
     }
 
     private void setLoading() {
