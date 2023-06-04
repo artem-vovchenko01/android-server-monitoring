@@ -7,20 +7,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import com.example.servermonitor.MainActivity;
@@ -29,8 +28,7 @@ import com.example.servermonitor.SshSessionWorker;
 import com.example.servermonitor.adapter.ServerFilesAdapter;
 import com.example.servermonitor.databinding.FragmentBrowseServerFilesBinding;
 import com.example.servermonitor.helper.FileLoadingProgressMonitor;
-import com.example.servermonitor.helper.LocalFileOperations;
-import com.example.servermonitor.helper.ServerFileOperations;
+import com.example.servermonitor.helper.FileOperations;
 import com.example.servermonitor.helper.UiHelper;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.model.SshKeyModel;
@@ -38,13 +36,6 @@ import com.example.servermonitor.service.SshKeyService;
 import com.example.servermonitor.service.SshShellSessionWorker;
 import com.jcraft.jsch.ChannelSftp;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
@@ -60,6 +51,7 @@ public class BrowseServerFilesFragment extends Fragment {
     private SshKeyService sshKeyService;
     public String currentPath;
     private String homePath;
+    private ServerModel server;
 
     public BrowseServerFilesFragment() {
         // Required empty public constructor
@@ -84,7 +76,9 @@ public class BrowseServerFilesFragment extends Fragment {
         registerForContextMenu(binding.rvServerFiles);
         new Thread(() -> {
             Bundle args = getArguments();
-            ServerModel server = args.getParcelable("serverModel");
+            server = args.getParcelable("serverModel");
+            activity.getSupportActionBar().setTitle("Filesystem (" + server.getName() + ")");
+            FileOperations.serverModelLastBrowsedFiles = server;
             Optional<SshKeyModel> sshKey = sshKeyService.getSshKeyForServer(server);
             try {
                 sshSessionWorker = new SshSessionWorker(context, server, sshKey);
@@ -97,6 +91,12 @@ public class BrowseServerFilesFragment extends Fragment {
             homePath = homeDir;
             binding.tvPath.setText(homeDir);
             lsEntries = shellSessionWorker.listDir(homeDir, this);
+            if (lsEntries == null) {
+                lsEntries = new Vector<>();
+                activity.runOnUiThread(() -> {
+                    Toast.makeText(context, "Error occurred while loading directory listing", Toast.LENGTH_LONG).show();
+                });
+            }
             adapter = new ServerFilesAdapter(context, lsEntries, activity, this);
             activity.runOnUiThread(() -> {
                 binding.rvServerFiles.setAdapter(adapter);
@@ -118,6 +118,10 @@ public class BrowseServerFilesFragment extends Fragment {
         binding.btnRefreshDir.setOnClickListener(v -> {
             goToPath(".");
         });
+        binding.btnLocalFiles.setOnClickListener(v -> {
+            NavController controller = Navigation.findNavController(binding.getRoot());
+            controller.navigate(R.id.localFilesFragment);
+        });
         binding.btnMenu.setOnClickListener(this::showPopupMenu);
     }
 
@@ -138,6 +142,12 @@ public class BrowseServerFilesFragment extends Fragment {
         new Thread(() -> {
             setLoading();
             lsEntries = shellSessionWorker.listDir(path, this);
+            if (lsEntries == null) {
+                lsEntries = new Vector<>();
+                activity.runOnUiThread(() -> {
+                    Toast.makeText(context, "Error occurred while loading directory listing", Toast.LENGTH_LONG).show();
+                });
+            }
             activity.runOnUiThread(() -> {
                 binding.tvPath.setText(currentPath);
             });
@@ -163,24 +173,20 @@ public class BrowseServerFilesFragment extends Fragment {
         switch (item.getTitle().toString()) {
             case "Edit":
                 break;
+            case "Copy":
+                FileOperations.remoteFileToCopy = currentPath + "/" + entry.getFilename();
+                FileOperations.remoteFileShortName = entry.getFilename();
+                FileOperations.serverModelWantToCopyFrom = server;
+                break;
             case "Download":
                 new Thread(() -> {
-                    List<Object> results = shellSessionWorker.downloadFile(entry.getFilename());
-                    InputStream inputStream = (InputStream) results.get(0);
-                    FileLoadingProgressMonitor monitor = (FileLoadingProgressMonitor) results.get(1);
-                    if (inputStream != null) {
-                        new Thread(() -> {
-                            try {
-                                ServerFileOperations.saveFileToLocalStorage(context, inputStream, entry.getFilename());
-                                activity.runOnUiThread(() -> {
-                                    Toast.makeText(context, "Downlaod succeeded", Toast.LENGTH_LONG).show();
-                                });
-                            } catch (IOException e) {
-                                activity.runOnUiThread(() -> {
-                                    Toast.makeText(context, "Downlaod failed", Toast.LENGTH_LONG).show();
-                                });
-                            }
-                        }).start();
+                    List<Object> results = shellSessionWorker.copyFromServer(currentPath + "/" + entry.getFilename(), entry.getFilename(), context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath());
+                    if (!(boolean) results.get(0)) {
+                        activity.runOnUiThread(() ->
+                                Toast.makeText(context, "Download failed", Toast.LENGTH_LONG).show());
+                    } else {
+                        FileLoadingProgressMonitor monitor = (FileLoadingProgressMonitor) results.get(1);
+                        UiHelper.monitorProgress(getContext(), activity, monitor, () -> null);
                     }
                 }).start();
                 break;
@@ -204,10 +210,10 @@ public class BrowseServerFilesFragment extends Fragment {
         PopupMenu popupMenu = new PopupMenu(getContext(), view);
         popupMenu.inflate(R.menu.file_browser_menu);
         MenuItem pasteItem = popupMenu.getMenu().getItem(2);
-        if (LocalFileOperations.localFileToCopy == null) {
+        if (FileOperations.localFileToCopy == null) {
             pasteItem.setEnabled(false);
         } else {
-            pasteItem.setTitle("Paste " + LocalFileOperations.localFileToCopy.getName());
+            pasteItem.setTitle("Paste " + FileOperations.localFileToCopy.getName());
         }
 
         popupMenu.setOnMenuItemClickListener(i -> {
@@ -230,31 +236,12 @@ public class BrowseServerFilesFragment extends Fragment {
             }
             else if (itemId == R.id.miPaste) {
                 new Thread(() -> {
-                    List<Object> results = shellSessionWorker.copyFromLocal(LocalFileOperations.localFileToCopy.getAbsolutePath(), LocalFileOperations.localFileToCopy.getName(), currentPath);
+                    List<Object> results = shellSessionWorker.copyFromLocal(FileOperations.localFileToCopy.getAbsolutePath(), FileOperations.localFileToCopy.getName(), currentPath);
                     if ((boolean) results.get(0)) {
                         FileLoadingProgressMonitor monitor = (FileLoadingProgressMonitor) results.get(1);
-                        activity.runOnUiThread(() -> {
-                            Handler progressHandler = UiHelper.showProgressDialog(getContext());
-                            new Thread(() -> {
-                                while (true) {
-                                    Message msg = Message.obtain();
-                                    msg.obj = monitor.getProgressPercents();
-                                    msg.setTarget(progressHandler);
-                                    msg.sendToTarget();
-                                    if (monitor.getProgress() == 1) break;
-                                    try {
-                                        Thread.sleep(50);
-                                    } catch (InterruptedException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                }
-                                try {
-                                    Thread.sleep(500);
-                                } catch (InterruptedException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                goToPath(".");
-                            }).start();
+                        UiHelper.monitorProgress(getContext(), activity, monitor, () -> {
+                            goToPath(".");
+                            return null;
                         });
                     }
                 }).start();

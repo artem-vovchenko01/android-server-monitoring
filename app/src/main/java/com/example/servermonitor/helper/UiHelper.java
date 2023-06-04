@@ -13,10 +13,13 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
+import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
+import com.example.servermonitor.model.ServerModel;
 
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class UiHelper {
     public static void actOnStringInputFromDialog(Context context, View dialogView, String title, DialogInterface.OnClickListener listener) {
@@ -43,11 +46,11 @@ public class UiHelper {
     }
 
     public static void createDirectoryAfterDialog(Context context, Consumer<String> directoryCreator) {
-        verifyDialogInputAndAct(context, directoryCreator, LocalFileOperations::verifyFilename, "Directory name", "Directory name is invalid");
+        verifyDialogInputAndAct(context, directoryCreator, FileOperations::verifyFilename, "Directory name", "Directory name is invalid");
     }
 
     public static void createFileAfterDialog(Context context, Consumer<String> fileCreator) {
-        verifyDialogInputAndAct(context, fileCreator, LocalFileOperations::verifyFilename, "File name", "File name is invalid");
+        verifyDialogInputAndAct(context, fileCreator, FileOperations::verifyFilename, "File name", "File name is invalid");
     }
 
     public static Handler showProgressDialog(Context context) {
@@ -71,5 +74,34 @@ public class UiHelper {
             }
         };
         return handler;
+    }
+    public static Boolean serverStillExists(MainActivity activity, ServerModel server) {
+        return activity.serverModels.stream().anyMatch(s -> s.getId() == server.getId());
+    }
+
+    public static void monitorProgress(Context context, MainActivity activity, FileLoadingProgressMonitor monitor, Supplier function) {
+        activity.runOnUiThread(() -> {
+            Handler progressHandler = UiHelper.showProgressDialog(context);
+            new Thread(() -> {
+                while (true) {
+                    Message msg = Message.obtain();
+                    msg.obj = monitor.getProgressPercents();
+                    msg.setTarget(progressHandler);
+                    msg.sendToTarget();
+                    if (monitor.getProgress() == 1) break;
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                try {
+                    Thread.sleep(300);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                function.get();
+            }).start();
+        });
     }
 }

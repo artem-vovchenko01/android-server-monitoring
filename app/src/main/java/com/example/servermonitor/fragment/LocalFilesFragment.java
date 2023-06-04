@@ -1,13 +1,14 @@
 package com.example.servermonitor.fragment;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,19 +20,24 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
 import com.example.servermonitor.adapter.LocalFilesAdapter;
 import com.example.servermonitor.databinding.FragmentLocalFilesBinding;
-import com.example.servermonitor.helper.LocalFileOperations;
+import com.example.servermonitor.helper.FileLoadingProgressMonitor;
+import com.example.servermonitor.helper.FileOperations;
 import com.example.servermonitor.helper.UiHelper;
+import com.example.servermonitor.model.ServerModel;
+import com.example.servermonitor.model.SshKeyModel;
+import com.example.servermonitor.service.SshKeyService;
+import com.example.servermonitor.service.SshShellSessionWorker;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.function.Consumer;
+import java.util.List;
+import java.util.Optional;
 
 public class LocalFilesFragment extends Fragment {
     private FragmentLocalFilesBinding binding;
@@ -39,6 +45,7 @@ public class LocalFilesFragment extends Fragment {
     private LocalFilesAdapter adapter;
     private File currentDirectory;
     private MainActivity activity;
+    private SshKeyService sshKeyService;
     private Context context;
     public String currentPath;
     public String homePath;
@@ -56,14 +63,20 @@ public class LocalFilesFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         binding = FragmentLocalFilesBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
+        sshKeyService = new SshKeyService(MainActivity.database);
         activity.getSupportActionBar().setTitle("Local files");
         context = activity.getApplicationContext();
         setupListeners();
         setLoading();
         registerForContextMenu(binding.rvServerFiles);
+        if (FileOperations.serverModelLastBrowsedFiles == null || (! UiHelper.serverStillExists(activity, FileOperations.serverModelLastBrowsedFiles))) {
+            if (activity.serverModels.size() > 0)
+                FileOperations.serverModelLastBrowsedFiles = activity.serverModels.get(0);
+            else
+                binding.btnToServerFiles.setEnabled(false);
+        }
         new Thread(() -> {
             String homeDir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath();
             currentPath = homeDir;
@@ -84,13 +97,27 @@ public class LocalFilesFragment extends Fragment {
         return binding.getRoot();
     }
     private void setupListeners() {
-        binding.btnDirectoryHome.setOnClickListener(v -> {
-            goToPath(homeDirectory);
+        binding.btnDirectoryHome.setOnClickListener(v -> goToPath(homeDirectory));
+        binding.btnRefreshDir.setOnClickListener(v -> goToPath(currentDirectory));
+        binding.btnMenu.setOnClickListener(this::showPopupMenu);
+        binding.btnToServerFiles.setOnClickListener(v -> {
+            NavController controller = Navigation.findNavController(binding.getRoot());
+            Bundle args = new Bundle();
+            args.putParcelable("serverModel", FileOperations.serverModelLastBrowsedFiles);
+            controller.navigate(R.id.browseServerFilesFragment, args);
         });
-        binding.btnRefreshDir.setOnClickListener(v -> {
+    }
+    private void createDirectory() {
+        UiHelper.createDirectoryAfterDialog(getContext(), directoryName -> {
+            File newFile = new File(currentPath + "/" + directoryName);
+            boolean success = newFile.mkdir();
             goToPath(currentDirectory);
+            if (!success)
+                Toast.makeText(context, "Failed creating directory.", Toast.LENGTH_LONG).show();
         });
-        binding.btnCreateFile.setOnClickListener(v -> UiHelper.createFileAfterDialog(getContext(), fileName -> {
+    }
+    private void createFile() {
+        UiHelper.createFileAfterDialog(getContext(), fileName -> {
             File newFile = new File(currentPath + "/" + fileName);
             boolean success = true;
             try {
@@ -101,14 +128,7 @@ public class LocalFilesFragment extends Fragment {
             if (! success)
                 Toast.makeText(context, "Failed creating file.", Toast.LENGTH_LONG).show();
             goToPath(currentDirectory);
-        }));
-        binding.btnCreateDirectory.setOnClickListener(v -> UiHelper.createDirectoryAfterDialog(getContext(), directoryName -> {
-            File newFile = new File(currentPath + "/" + directoryName);
-            boolean success = newFile.mkdir();
-            goToPath(currentDirectory);
-            if (!success)
-                Toast.makeText(context, "Failed creating directory.", Toast.LENGTH_LONG).show();
-        }));
+        });
     }
 
     private void setLoading() {
@@ -156,7 +176,7 @@ public class LocalFilesFragment extends Fragment {
         File file = files[pposition - 2];
         switch (item.getTitle().toString()) {
             case "Copy":
-                LocalFileOperations.localFileToCopy = file;
+                FileOperations.localFileToCopy = file;
                 break;
             case "Edit":
                 break;
@@ -166,7 +186,7 @@ public class LocalFilesFragment extends Fragment {
                 new Thread(() -> {
                     Boolean deleted = false;
                     if (file.isDirectory())
-                        deleted = LocalFileOperations.removeDirectory(file);
+                        deleted = FileOperations.removeDirectory(file);
                     else
                         deleted = file.delete();
                     Boolean finalDeleted = deleted;
@@ -181,5 +201,50 @@ public class LocalFilesFragment extends Fragment {
                 break;
         }
         return super.onContextItemSelected(item);
+    }
+
+    private void showPopupMenu(View view) {
+        PopupMenu popupMenu = new PopupMenu(getContext(), view);
+        popupMenu.inflate(R.menu.file_browser_menu);
+        MenuItem pasteItem = popupMenu.getMenu().getItem(2);
+        if (FileOperations.remoteFileToCopy != null && UiHelper.serverStillExists(activity, FileOperations.serverModelWantToCopyFrom)) {
+            pasteItem.setTitle("Paste " + FileOperations.remoteFileShortName);
+        } else {
+            pasteItem.setEnabled(false);
+        }
+
+        popupMenu.setOnMenuItemClickListener(i -> {
+            int itemId = i.getItemId();
+            if (itemId == R.id.miNewDirectory) {
+                createDirectory();
+            }
+            else if (itemId ==R.id.miNewFile) {
+                createFile();
+            }
+            else if (itemId == R.id.miPaste) {
+                new Thread(() -> {
+                    ServerModel server = FileOperations.serverModelWantToCopyFrom;
+                    Optional<SshKeyModel> sshKey = sshKeyService.getSshKeyForServer(server);
+                    SshShellSessionWorker shellSessionWorker = null;
+                    try {
+                        shellSessionWorker = new SshShellSessionWorker(context, FileOperations.serverModelWantToCopyFrom, sshKey);
+                    } catch (Exception e) {
+                        activity.runOnUiThread(() ->
+                                Toast.makeText(context, "Error while connecting to server.", Toast.LENGTH_LONG));
+                        return;
+                    }
+                    List<Object> results = shellSessionWorker.copyFromServer(FileOperations.remoteFileToCopy, FileOperations.remoteFileShortName, currentPath);
+                    if ((boolean) results.get(0)) {
+                        FileLoadingProgressMonitor monitor = (FileLoadingProgressMonitor) results.get(1);
+                        UiHelper.monitorProgress(getContext(), activity, monitor, () -> {
+                            goToPath(currentDirectory);
+                            return null;
+                        });
+                    }
+                }).start();
+            }
+            return false;
+        });
+        popupMenu.show();
     }
 }

@@ -12,35 +12,53 @@
         >
         <Button
             android:id="@+id/btnDirectoryHome"
-            android:text="HOME"
+            android:text=""
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            android:layout_width="70dp"
+            android:layout_height="wrap_content"
+            />
+        <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:src="@drawable/baseline_home_24"
+            app:layout_constraintTop_toTopOf="@id/btnDirectoryHome"
+            app:layout_constraintBottom_toBottomOf="@id/btnDirectoryHome"
+            app:layout_constraintStart_toStartOf="@id/btnDirectoryHome"
+            app:layout_constraintEnd_toEndOf="@id/btnDirectoryHome"
             />
         <Button
             android:id="@+id/btnRefreshDir"
-            android:text="REFRESH"
+            android:text=""
             app:layout_constraintStart_toEndOf="@id/btnDirectoryHome"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_width="wrap_content"
+            android:layout_width="70dp"
             android:layout_height="wrap_content"
             />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/baseline_refresh_24"
+            app:layout_constraintTop_toTopOf="@id/btnRefreshDir"
+            app:layout_constraintBottom_toBottomOf="@id/btnRefreshDir"
+            app:layout_constraintStart_toStartOf="@id/btnRefreshDir"
+            app:layout_constraintEnd_toEndOf="@id/btnRefreshDir"
+            />
         <Button
-            android:id="@+id/btnCreateFile"
-            android:text="NEW FILE"
+            android:id="@+id/btnToServerFiles"
+            android:text="SERVER FILES"
             app:layout_constraintStart_toEndOf="@id/btnRefreshDir"
             app:layout_constraintTop_toTopOf="parent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             />
         <Button
-            android:id="@+id/btnCreateDirectory"
-            android:text="NEW DIRECTORY"
-            app:layout_constraintStart_toEndOf="@id/btnCreateFile"
+            android:id="@+id/btnMenu"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:background="@drawable/baseline_more_vert_24"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             />
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvServerFiles"

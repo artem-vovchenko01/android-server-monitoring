@@ -114,8 +114,15 @@ public class SshShellSessionWorker implements AutoCloseable {
             fragment.currentPath = channelSftp.pwd();
             lsEntries = channelSftp.ls(".");
             lsEntries.sort(lsEntryComparator);
-        } catch(JSchException | SftpException e){
-            throw new RuntimeException(e);
+        } catch(JSchException | SftpException e) {
+            channelSftp.disconnect();
+            try {
+                channelSftp = (ChannelSftp) session.openChannel("sftp");
+                channelSftp.connect();
+            } catch (JSchException ex) {
+                return null;
+            }
+            return null;
         }
         return lsEntries;
     }
@@ -225,6 +232,27 @@ public class SshShellSessionWorker implements AutoCloseable {
         new Thread(() -> {
             try {
                 channelSftp.put(localFullPath, remoteDirectory + "/" + localFileName, monitor);
+            } catch (SftpException e) {}
+        }).start();
+        results.add(true);
+        results.add(monitor);
+        return results;
+    }
+    public List<Object> copyFromServer(String remotePath, String remoteName, String localDirectory) {
+        ArrayList<Object> results = new ArrayList<>();
+        if (channelSftp == null) {
+            try {
+            channelSftp = (ChannelSftp) session.openChannel("sftp");
+            channelSftp.connect();
+            } catch (JSchException e) {
+                results.add(false);
+                return results;
+            }
+        }
+        FileLoadingProgressMonitor monitor = new FileLoadingProgressMonitor();
+        new Thread(() -> {
+            try {
+                channelSftp.get(remotePath, localDirectory + "/" + remoteName, monitor);
             } catch (SftpException e) {}
         }).start();
         results.add(true);
