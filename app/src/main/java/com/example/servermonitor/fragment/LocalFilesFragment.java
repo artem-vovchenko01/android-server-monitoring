@@ -56,6 +56,13 @@ public class LocalFilesFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_local_files_title);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -66,7 +73,6 @@ public class LocalFilesFragment extends Fragment {
         binding = FragmentLocalFilesBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
         sshKeyService = new SshKeyService(MainActivity.database);
-        activity.getSupportActionBar().setTitle("Local files");
         context = activity.getApplicationContext();
         setupListeners();
         setLoading();

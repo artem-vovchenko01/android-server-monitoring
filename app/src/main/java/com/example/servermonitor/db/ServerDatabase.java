@@ -23,7 +23,7 @@ import com.example.servermonitor.db.entity.SshKeyEntity;
         SshKeyEntity.class,
         ShellScriptEntity.class,
         AlertEntity.class},
-        version = 6
+        version = 8
 )
 @TypeConverters({Converters.class})
 public abstract class ServerDatabase extends RoomDatabase {

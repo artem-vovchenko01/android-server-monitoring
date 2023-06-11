@@ -1,7 +1,6 @@
 package com.example.servermonitor;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
@@ -10,18 +9,20 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.room.Room;
 
 import android.os.Bundle;
-import android.view.MenuItem;
-import android.view.View;
 
 import com.example.servermonitor.adapter.ServerAdapter;
 import com.example.servermonitor.databinding.ActivityMainBinding;
 import com.example.servermonitor.db.Converters;
 import com.example.servermonitor.db.ServerDatabase;
 import com.example.servermonitor.db.entity.MonitoringRecordEntity;
+import com.example.servermonitor.model.AlertModel;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.model.SshKeyModel;
+import com.example.servermonitor.service.AlertService;
+import com.example.servermonitor.service.NotificationUtils;
 import com.example.servermonitor.service.ServerService;
 import com.example.servermonitor.service.SshKeyService;
+import com.example.servermonitor.service.SshSessionWorker;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -33,9 +34,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int MONITORING_INTERVAL = 3;
+    private static final int MONITORING_INTERVAL = 5;
     public static ServerDatabase database;
     public ServerService serverService;
     public ServerAdapter serverAdapter;
@@ -45,7 +47,8 @@ public class MainActivity extends AppCompatActivity {
     public HashMap<ServerModel, SshSessionWorker> serverSessions;
     private ActivityMainBinding binding;
     private SshKeyService sshKeyService;
-    public File fileToCopy = null;
+    private AlertService alertService;
+    public ArrayList<AlertModel> alerts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,11 +65,13 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         serverService = new ServerService(database);
         sshKeyService = new SshKeyService(database);
+        alertService = new AlertService(database);
         serverSessions = new HashMap<>();
         scheduledJobs = new HashMap<>();
         executors = new HashMap<>();
         new Thread(() -> {
             serverModels = serverService.getAllServers();
+            alerts = alertService.getAllAlerts();
             addPreviousServers(serverModels);
         }).start();
     }
@@ -98,7 +103,8 @@ public class MainActivity extends AppCompatActivity {
     public void addNewServer(ServerModel serverModel) {
         new Thread(() -> {
             if (serverModel.getId() != 0) {
-                int pos = serverModels.indexOf(serverModels.stream().filter(m -> m.getId() == serverModel.getId()).findFirst().get());
+                int pos = serverModels.indexOf(serverModels.stream()
+                        .filter(m -> m.getId() == serverModel.getId()).findFirst().get());
                 serverService.updateServer(serverModel);
                 ServerModel previousServer = serverModels.get(pos);
                 stopJobForServer(previousServer);
@@ -121,6 +127,39 @@ public class MainActivity extends AppCompatActivity {
         scheduledJobs.remove(serverModel);
         executors.remove(serverModel);
     }
+    private void checkAlertStatus(ServerModel server, MonitoringRecordEntity monitoringRecord) {
+        ArrayList<AlertModel> alertsForServer = alerts.stream().filter(
+                a -> a.getServerId() == server.getId()
+        ).collect(Collectors.toCollection(ArrayList::new));
+        for (AlertModel alert : alertsForServer) {
+            switch (alert.getAlertType()) {
+                case TYPE_STORAGE:
+                    if (monitoringRecord.diskUsedMb > alert.getThresholdValue()) {
+                        runOnUiThread(() -> {
+                            NotificationUtils.showNotification(this, getApplicationContext(), "Disk usage alert",
+                                    "Disk usage threshold of " + alert.getThresholdValue() + "MB exceeded! Current value: " + monitoringRecord.diskUsedMb + "MB");
+                        });
+                    }
+                    break;
+                case TYPE_CPU:
+                    if (monitoringRecord.cpuUsagePercent > alert.getThresholdValue()) {
+                        runOnUiThread(() -> {
+                            NotificationUtils.showNotification(this, getApplicationContext(), "CPU usage alert",
+                                    "CPU usage threshold of " + alert.getThresholdValue() + "% exceeded! Current value: " + monitoringRecord.cpuUsagePercent + "%");
+                        });
+                    }
+                    break;
+                case TYPE_MEMORY:
+                    if (monitoringRecord.memoryUsedMb > alert.getThresholdValue()) {
+                        runOnUiThread(() -> {
+                            NotificationUtils.showNotification(this, getApplicationContext(), "Memory usage alert",
+                                    "Memory usage threshold of " + alert.getThresholdValue() + "MB exceeded! Current value: " + monitoringRecord.memoryUsedMb + "MB");
+                        });
+                    }
+                    break;
+            }
+        }
+    }
 
     private void addWorkerForNewServer(ServerModel serverModel, int position) {
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
@@ -142,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             MonitoringRecordEntity monitoringRecordEntity = worker.getMonitoringStats();
+            checkAlertStatus(serverModel, monitoringRecordEntity);
             updateServerModel(position, serverModel, monitoringRecordEntity);
             runOnUiThread(() -> {
                 if (serverAdapter != null)

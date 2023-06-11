@@ -44,12 +44,6 @@ public class AlertsAdapter extends RecyclerView.Adapter<AlertsAdapter.AlertViewH
             selectedItemPosition = position;
             return false;
         });
-        holder.itemView.setOnClickListener(v -> {
-            NavController controller = Navigation.findNavController(holder.itemView);
-            Bundle args = new Bundle();
-            args.putParcelable("alertModel", alert);
-            controller.navigate(R.id.action_alertsFragment_to_editAlertFragment, args);
-        });
         holder.tvAlertName.setText(alert.getName());
         int imResourceId = 0;
         switch (alert.getAlertType()) {
@@ -57,22 +51,10 @@ public class AlertsAdapter extends RecyclerView.Adapter<AlertsAdapter.AlertViewH
                 imResourceId = R.drawable.cpu;
                 break;
             case TYPE_MEMORY:
-                imResourceId = R.drawable.cpu;
-                break;
-            case TYPE_IO_READ:
-                imResourceId = R.drawable.cpu;
-                break;
-            case TYPE_IO_WRITE:
-                imResourceId = R.drawable.cpu;
-                break;
-            case TYPE_NETWORK_DL:
-                imResourceId = R.drawable.cpu;
-                break;
-            case TYPE_NETWORK_UL:
-                imResourceId = R.drawable.cpu;
+                imResourceId = R.drawable.ram;
                 break;
             case TYPE_STORAGE:
-                imResourceId = R.drawable.cpu;
+                imResourceId = R.drawable.disk;
                 break;
         }
         holder.imvAlertIcon.setImageResource(imResourceId);

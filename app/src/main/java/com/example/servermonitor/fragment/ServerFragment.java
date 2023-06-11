@@ -82,6 +82,7 @@ public class ServerFragment extends Fragment {
     }
     private void getServerModel(Bundle args) {
         serverModel = args.getParcelable("serverModel");
+        activity.getSupportActionBar().setTitle("Server " + serverModel.getName());
     }
 
     @Override
@@ -149,6 +150,7 @@ public class ServerFragment extends Fragment {
             sessionEntity.dateStarted = Converters.dateToTimestamp(currentTime);
             database.getMonitoringSessionDao().addMonitoringSession(sessionEntity);
             sessionEntity = database.getMonitoringSessionDao().getMonitoringSessionByStartTime(Converters.dateToTimestamp(currentTime));
+            sessionEntity.serverId = serverModel.getId();
             serverModel.setMonitoringSessionId(sessionEntity.id);
         }).start();
     }
@@ -180,14 +182,15 @@ public class ServerFragment extends Fragment {
     }
     public void updateLineCharts() {
         int sessionId = serverModel.getMonitoringSessionId();
+        MonitoringSessionEntity session = database.getMonitoringSessionDao().getMonitoringSession(sessionId);
         ArrayList<MonitoringRecordEntity> monitoringRecords = new ArrayList<>(database.getMonitoringRecordDao().getAllByMonitoringSessionId(sessionId));
         if (sessionId == -1 || monitoringRecords.size() == 0) {
             activity.runOnUiThread(() -> setLineChartsHidden());
         } else {
             activity.runOnUiThread(() -> {
-                lineChartStyler.styleLineChart(binding.lcMemory, monitoringRecords, LineChartStyler.LineChartDataType.DATA_MEMORY);
-                lineChartStyler.styleLineChart(binding.lcCpu, monitoringRecords, LineChartStyler.LineChartDataType.DATA_CPU);
-                lineChartStyler.styleLineChart(binding.lcStorage, monitoringRecords, LineChartStyler.LineChartDataType.DATA_DISK);
+                lineChartStyler.styleLineChart(binding.lcMemory, monitoringRecords, LineChartStyler.LineChartDataType.DATA_MEMORY, session);
+                lineChartStyler.styleLineChart(binding.lcCpu, monitoringRecords, LineChartStyler.LineChartDataType.DATA_CPU, session);
+                lineChartStyler.styleLineChart(binding.lcStorage, monitoringRecords, LineChartStyler.LineChartDataType.DATA_DISK, session);
                 setLineChartsVisible();
             });
         }

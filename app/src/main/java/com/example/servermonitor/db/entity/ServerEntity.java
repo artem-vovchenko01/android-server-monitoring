@@ -2,10 +2,15 @@ package com.example.servermonitor.db.entity;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.ForeignKey;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "servers")
+@Entity(
+        tableName = "servers",
+        foreignKeys =
+            @ForeignKey(entity = SshKeyEntity.class, parentColumns = "id", childColumns = "privateKeyId")
+)
 public class ServerEntity {
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")

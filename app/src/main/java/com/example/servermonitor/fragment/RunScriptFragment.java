@@ -3,6 +3,7 @@ package com.example.servermonitor.fragment;
 import android.content.Context;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -12,13 +13,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.TextView;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
-import com.example.servermonitor.SshSessionWorker;
+import com.example.servermonitor.service.SshSessionWorker;
 import com.example.servermonitor.adapter.RunScriptAdapter;
-import com.example.servermonitor.adapter.ShellScriptAdapter;
 import com.example.servermonitor.databinding.FragmentRunScriptBinding;
 import com.example.servermonitor.dialog.ShowScriptOutputDialog;
 import com.example.servermonitor.model.ServerModel;
@@ -29,7 +28,6 @@ import com.example.servermonitor.service.SshKeyService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 public class RunScriptFragment extends Fragment {
@@ -42,6 +40,12 @@ public class RunScriptFragment extends Fragment {
     private SshKeyService sshKeyService;
     private ServerService serverService;
 
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_run_shell_script_title);
+    }
     public RunScriptFragment() {
         // Required empty public constructor
     }
@@ -61,6 +65,7 @@ public class RunScriptFragment extends Fragment {
         Bundle args = getArguments();
         // Inflate the layout for this fragment
         shellScript = args.getParcelable("shellScriptModel");
+        activity.getSupportActionBar().setTitle(getString(R.string.fragment_run_shell_script_title) + " " + shellScript.getName());
         setupListeners();
         serverService = new ServerService(MainActivity.database);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(context);

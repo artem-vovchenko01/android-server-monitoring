@@ -3,14 +3,16 @@ package com.example.servermonitor.helper;
 import com.jcraft.jsch.SftpProgressMonitor;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.util.Locale;
 
 public class FileLoadingProgressMonitor implements SftpProgressMonitor {
     private long totalBytes;
     private long transferredBytes;
     private double progress;;
     private String progressPercents = "0";
-    private NumberFormat formatter = new DecimalFormat("#0.00");
+    private NumberFormat formatter = new DecimalFormat("#0.00", DecimalFormatSymbols.getInstance(Locale.US));
     @Override
     public void init(int op, String src, String dest, long max) {
         totalBytes = max;

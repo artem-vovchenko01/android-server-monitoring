@@ -10,23 +10,12 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.servermonitor.MainActivity;
-import com.example.servermonitor.R;
-import com.example.servermonitor.SshSessionWorker;
 import com.example.servermonitor.databinding.FragmentTerminalBinding;
-import com.example.servermonitor.mapper.ServerMapper;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.model.SshKeyModel;
 import com.example.servermonitor.service.SshKeyService;
 import com.example.servermonitor.service.SshShellSessionWorker;
-import com.jcraft.jsch.ChannelShell;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.Optional;
 
 public class TerminalFragment extends Fragment {

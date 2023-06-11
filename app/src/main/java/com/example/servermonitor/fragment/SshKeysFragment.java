@@ -36,6 +36,12 @@ public class SshKeysFragment extends Fragment {
     private Context context;
     private SshKeyService sshKeyService;
     private ArrayList<SshKeyModel> sshKeys;
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_ssh_keys_title);
+    }
     public SshKeysFragment() {
         // Required empty public constructor
     }
@@ -51,7 +57,6 @@ public class SshKeysFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentSshKeysBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
-        activity.getSupportActionBar().setTitle("Ssh keys");
         context = activity.getApplicationContext();
         sshKeyService = new SshKeyService(MainActivity.database);
         setupUiComponents();

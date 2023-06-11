@@ -1,4 +1,4 @@
-package com.example.servermonitor;
+package com.example.servermonitor.service;
 
 import android.content.Context;
 import android.util.Log;

@@ -9,11 +9,7 @@ public class AlertModel implements Parcelable {
     public enum AlertType {
         TYPE_MEMORY("Memory (MB)"),
         TYPE_CPU("CPU (%)"),
-        TYPE_STORAGE("Storage (MB)"),
-        TYPE_IO_READ("I/O read (Mbps)"),
-        TYPE_IO_WRITE("I/O write (Mbps)"),
-        TYPE_NETWORK_DL("Network download (Mbps)"),
-        TYPE_NETWORK_UL("Network upload (Mbps)");
+        TYPE_STORAGE("Storage (MB)");
         private String friendlyName;
         private AlertType(String friendlyName){
             this.friendlyName = friendlyName;

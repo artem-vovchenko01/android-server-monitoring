@@ -3,6 +3,7 @@ package com.example.servermonitor.fragment;
 import android.content.Context;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -39,6 +40,13 @@ public class AlertsFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_alerts_title);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -47,8 +55,6 @@ public class AlertsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         binding = FragmentAlertsBinding.inflate(inflater, container, false);
-        activity = (MainActivity) getActivity();
-        activity.getSupportActionBar().setTitle("Alerts");
         alertService = new AlertService(MainActivity.database);
         context = activity.getApplicationContext();
         setupListeners();
@@ -89,10 +95,12 @@ public class AlertsFragment extends Fragment {
             int id = (int) alertService.addAlert(alert);
             alert.setId(id);
             alerts.add(alert);
+            activity.alerts.add(alert);
         } else {
             alertService.updateAlert(alert);
             int pos = alerts.indexOf(alerts.stream().filter(a -> a.getId() == alert.getId()).findFirst().get());
             alerts.set(pos, alert);
+            activity.alerts.set(pos, alert);
         }
     }
     @Override
@@ -111,6 +119,7 @@ public class AlertsFragment extends Fragment {
                 new Thread(() -> {
                     alertService.deleteAlert(alerts.get(pposition));
                     alerts.remove(pposition);
+                    activity.alerts.remove(pposition);
                     activity.runOnUiThread(() -> adapter.notifyItemRemoved(pposition));
                 }).start();
                 break;

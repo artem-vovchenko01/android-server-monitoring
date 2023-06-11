@@ -5,12 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".fragment.ServersFragment">
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_height="match_parent"
-        android:layout_width="match_parent"
-        >
-
+        android:layout_width="match_parent">
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvServers"
             android:layout_width="0dp"
@@ -19,7 +16,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fabAddServer"
             android:layout_width="wrap_content"
@@ -32,9 +28,6 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:circularflow_radiusInDP="1000dp"
-            android:background="@drawable/fab_circle"
-            />
-
+            android:background="@drawable/fab_circle" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </FrameLayout>

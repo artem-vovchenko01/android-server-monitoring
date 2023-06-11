@@ -88,8 +88,6 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ServerView
             tvDiskTotal = itemView.findViewById(R.id.tvDiskTotal);
             tvCpuUsage = itemView.findViewById(R.id.tvCpuUsage);
             imvServerStatus = itemView.findViewById(R.id.imvServerStatus);
-            btnEdit = itemView.findViewById(R.id.btnEdit);
-            btnDelete = itemView.findViewById(R.id.btnDelete);
         }
     }
 }

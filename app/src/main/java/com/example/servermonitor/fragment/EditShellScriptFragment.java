@@ -28,6 +28,12 @@ public class EditShellScriptFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_edit_shell_script_create_title);
+    }
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -64,6 +70,7 @@ public class EditShellScriptFragment extends Fragment {
                 if (args != null) {
                     if (args.getInt("edit") == 1) {
                         fillDataOfExistingShellScript(args.getParcelable("shellScriptModel"));
+                        activity.getSupportActionBar().setTitle(getString(R.string.fragment_edit_shell_script_edit_title) + " " + shellScriptModel.getName());
                     }
                     args.clear();
                 }

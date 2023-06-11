@@ -1,10 +1,15 @@
 package com.example.servermonitor.db.entity;
 
 import androidx.room.Entity;
+import androidx.room.ForeignKey;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "monitoringRecords")
+@Entity(
+        tableName = "monitoringRecords",
+        foreignKeys =
+        @ForeignKey(entity = MonitoringSessionEntity.class, parentColumns = "id", childColumns = "monitoringSessionId")
+)
 public class MonitoringRecordEntity {
     @PrimaryKey(autoGenerate = true)
     public int id;

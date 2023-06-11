@@ -36,6 +36,12 @@ public class ShellScriptsFragment extends Fragment {
     private ShellScriptService shellScriptService;
     private ArrayList<ShellScriptModel> shellScripts;
 
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_run_shell_script_title);
+    }
     public ShellScriptsFragment() {
         // Required empty public constructor
     }

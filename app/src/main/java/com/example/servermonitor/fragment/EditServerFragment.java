@@ -40,6 +40,13 @@ public class EditServerFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_edit_server_create_title);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -50,7 +57,6 @@ public class EditServerFragment extends Fragment {
        binding = FragmentEditServerBinding.inflate(inflater, container, false);
         sshKeyService = new SshKeyService(MainActivity.database);
         serverModel = new ServerModel();
-        activity = (MainActivity) getActivity();
         context = activity.getApplicationContext();
        Bundle args = getArguments();
        setupListeners();
@@ -80,6 +86,7 @@ public class EditServerFragment extends Fragment {
                 if (args != null) {
                     if (args.getInt("edit") == 1) {
                         fillDataOfExistingServer(args.getParcelable("serverModel"));
+                        activity.getSupportActionBar().setTitle(getString(R.string.fragment_edit_server_edit_title) + " " + serverModel.getName());
                     }
                     args.clear();
                 }

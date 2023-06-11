@@ -21,7 +21,7 @@ import android.view.ViewGroup;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
-import com.example.servermonitor.SshSessionWorker;
+import com.example.servermonitor.service.SshSessionWorker;
 import com.example.servermonitor.adapter.ServerAdapter;
 import com.example.servermonitor.databinding.FragmentServersBinding;
 import com.example.servermonitor.model.ServerModel;

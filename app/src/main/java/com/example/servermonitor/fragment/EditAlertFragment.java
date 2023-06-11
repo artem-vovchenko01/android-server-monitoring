@@ -3,6 +3,7 @@ package com.example.servermonitor.fragment;
 import android.content.Context;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -34,6 +35,12 @@ public class EditAlertFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_edit_alert_create_title);
+    }
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -43,7 +50,6 @@ public class EditAlertFragment extends Fragment {
                              Bundle savedInstanceState) {
         binding = FragmentEditAlertBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
-        activity.getSupportActionBar().setTitle("Alert");
         context = activity.getApplicationContext();
         serverService = new ServerService(MainActivity.database);
         binding.spinAlertType.setEnabled(false);
@@ -74,6 +80,7 @@ public class EditAlertFragment extends Fragment {
                 if (args != null) {
                     if (args.getInt("edit") == 1) {
                         fillDataOfExistingAlert(args.getParcelable("alertModel"));
+                        activity.getSupportActionBar().setTitle(getString(R.string.fragment_edit_alert_edit_title) + " " + alertModel.getName());
                     }
                     args.clear();
                 }

@@ -24,7 +24,7 @@ import android.widget.Toast;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
-import com.example.servermonitor.SshSessionWorker;
+import com.example.servermonitor.service.SshSessionWorker;
 import com.example.servermonitor.adapter.ServerFilesAdapter;
 import com.example.servermonitor.databinding.FragmentBrowseServerFilesBinding;
 import com.example.servermonitor.helper.FileLoadingProgressMonitor;
@@ -58,6 +58,12 @@ public class BrowseServerFilesFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_browse_files_title);
+    }
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -68,7 +74,6 @@ public class BrowseServerFilesFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentBrowseServerFilesBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
-        activity.getSupportActionBar().setTitle("Filesystem");
         context = activity.getApplicationContext();
         setupListeners();
         sshKeyService = new SshKeyService(MainActivity.database);
