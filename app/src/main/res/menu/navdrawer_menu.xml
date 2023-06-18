@@ -16,5 +16,8 @@
             <item
                 android:id="@+id/localFilesFragment"
                 android:title="Local files" />
+            <item
+                android:id="@+id/manageDataFragment"
+                android:title="Manage data" />
         </group>
 </menu>

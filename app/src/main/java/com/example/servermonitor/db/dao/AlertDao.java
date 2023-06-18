@@ -23,6 +23,8 @@ public interface AlertDao {
 
     @Query("delete from alerts where id == :id")
     void deleteAlertById(int id);
+    @Query("delete from alerts;")
+    void deleteAllAlerts();
 
     @Query("select * from alerts")
     List<AlertEntity> getAllAlerts();

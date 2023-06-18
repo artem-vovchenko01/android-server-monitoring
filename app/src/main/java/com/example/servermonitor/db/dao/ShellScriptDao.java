@@ -20,6 +20,8 @@ public interface ShellScriptDao {
 
     @Delete
     void deleteShellScript(ShellScriptEntity shellScriptEntity);
+    @Query("delete from shellScripts")
+    void deleteAllShellScripts();
 
     @Query("delete from shellScripts where id == :id")
     void deleteShellScriptById(int id);

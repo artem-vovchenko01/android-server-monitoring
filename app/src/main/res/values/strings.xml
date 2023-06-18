@@ -20,4 +20,6 @@
     <string name="fragment_edit_server_create_title">Create server</string>
     <string name="fragment_edit_ssh_key_create_title">Create SSH key</string>
     <string name="fragment_edit_shell_script_create_title">Create shell script</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

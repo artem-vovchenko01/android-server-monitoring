@@ -37,6 +37,9 @@
         <action
             android:id="@+id/action_serverFragment_to_browseServerFilesFragment"
             app:destination="@id/browseServerFilesFragment" />
+        <action
+            android:id="@+id/action_serverFragment_to_monitoringSessionsFragment"
+            app:destination="@id/monitoringSessionsFragment" />
     </fragment>
     <fragment
         android:id="@+id/terminalFragment"
@@ -98,4 +101,23 @@
         android:name="com.example.servermonitor.fragment.LocalFilesFragment"
         android:label="fragment_local_files"
         tools:layout="@layout/fragment_local_files" />
+    <fragment
+        android:id="@+id/monitoringSessionsFragment"
+        android:name="com.example.servermonitor.fragment.MonitoringSessionsFragment"
+        android:label="fragment_monitoring_sessions"
+        tools:layout="@layout/fragment_monitoring_sessions" >
+        <action
+            android:id="@+id/action_monitoringSessionsFragment_to_monitoringSessionFragment"
+            app:destination="@id/monitoringSessionFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/monitoringSessionFragment"
+        android:name="com.example.servermonitor.fragment.MonitoringSessionFragment"
+        android:label="fragment_monitoring_session"
+        tools:layout="@layout/fragment_monitoring_session" />
+    <fragment
+        android:id="@+id/manageDataFragment"
+        android:name="com.example.servermonitor.fragment.ManageDataFragment"
+        android:label="fragment_manage_data"
+        tools:layout="@layout/fragment_manage_data" />
 </navigation>

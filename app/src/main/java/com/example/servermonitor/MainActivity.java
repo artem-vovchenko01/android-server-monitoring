@@ -1,20 +1,36 @@
 package com.example.servermonitor;
 
+import android.Manifest;
+
+import androidx.activity.result.ActivityResult;
+import androidx.documentfile.provider.DocumentFile;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import androidx.room.Room;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.example.servermonitor.adapter.ServerAdapter;
 import com.example.servermonitor.databinding.ActivityMainBinding;
 import com.example.servermonitor.db.Converters;
 import com.example.servermonitor.db.ServerDatabase;
 import com.example.servermonitor.db.entity.MonitoringRecordEntity;
+import com.example.servermonitor.fragment.ServerFragment;
 import com.example.servermonitor.model.AlertModel;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.model.SshKeyModel;
@@ -25,9 +41,12 @@ import com.example.servermonitor.service.SshKeyService;
 import com.example.servermonitor.service.SshSessionWorker;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,7 +56,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int MONITORING_INTERVAL = 5;
+    public static final int MONITORING_INTERVAL = 3;
     public static ServerDatabase database;
     public ServerService serverService;
     public ServerAdapter serverAdapter;
@@ -48,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private SshKeyService sshKeyService;
     private AlertService alertService;
+    public ServerFragment serverFragment = null;
     public ArrayList<AlertModel> alerts;
 
     @Override
@@ -70,18 +90,22 @@ public class MainActivity extends AppCompatActivity {
         scheduledJobs = new HashMap<>();
         executors = new HashMap<>();
         new Thread(() -> {
-            serverModels = serverService.getAllServers();
-            alerts = alertService.getAllAlerts();
-            addPreviousServers(serverModels);
+            initializeData();
         }).start();
     }
+    public void initializeData() {
+        serverModels = serverService.getAllServers();
+        alerts = alertService.getAllAlerts();
+        addPreviousServers(serverModels);
+    }
+
     public void setupUiComponents() {
         NavHostFragment navHostFragment =
                 (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.navHostFragment);
 
         NavController navController = navHostFragment.getNavController();
         AppBarConfiguration appBarConfiguration =
-                new AppBarConfiguration.Builder(R.id.serversFragment, R.id.sshKeysFragment, R.id.shellScriptsFragment, R.id.alertsFragment, R.id.localFilesFragment).setDrawerLayout(binding.drawerLayout).build();
+                new AppBarConfiguration.Builder(R.id.serversFragment, R.id.sshKeysFragment, R.id.shellScriptsFragment, R.id.alertsFragment, R.id.localFilesFragment, R.id.manageDataFragment).setDrawerLayout(binding.drawerLayout).build();
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         NavigationUI.setupWithNavController(
@@ -191,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
         scheduledJobs.put(serverModel, future);
         executors.put(serverModel, executor);
     }
+
     private void updateServerModel(int position, ServerModel serverModel, MonitoringRecordEntity monitoringRecord) {
         if (monitoringRecord == null) {
             serverModel.setConnected(false);
@@ -204,12 +229,19 @@ public class MainActivity extends AppCompatActivity {
         serverModel.setCpuUsagePercent(monitoringRecord.cpuUsagePercent);
         serverModel.setConnected(true);
         serverModel.setServerStatusImg(R.drawable.greencircle);
+        if (serverFragment != null) {
+            serverFragment.updatePieCharts();
+        }
         if (serverModel.getMonitoringSessionId() != -1) {
             monitoringRecord.monitoringSessionId = serverModel.getMonitoringSessionId();
             monitoringRecord.timeRecorded = Converters.dateToTimestamp(Calendar.getInstance().getTime());
             database.getMonitoringRecordDao().addMonitoringRecord(monitoringRecord);
+            if (serverFragment != null) {
+                serverFragment.updateLineCharts();
+            }
         }
     }
+
 
     @Override
     protected void onDestroy() {

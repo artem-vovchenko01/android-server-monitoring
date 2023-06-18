@@ -20,6 +20,8 @@ public interface ServerDao {
 
     @Delete
     void deleteServer(ServerEntity serverEntity);
+    @Query("delete from servers")
+    void deleteAllServers();
     @Query("delete from servers where id == :id")
     void deleteServerById(int id);
 

@@ -5,9 +5,7 @@ import androidx.room.ForeignKey;
 import androidx.room.PrimaryKey;
 
 @Entity(
-        tableName = "alerts",
-        foreignKeys =
-        @ForeignKey(entity = ServerEntity.class, parentColumns = "id", childColumns = "serverId")
+        tableName = "alerts"
 )
 public class AlertEntity {
     @PrimaryKey(autoGenerate = true)

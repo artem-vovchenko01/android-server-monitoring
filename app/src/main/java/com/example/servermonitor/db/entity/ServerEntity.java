@@ -7,9 +7,7 @@ import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(
-        tableName = "servers",
-        foreignKeys =
-            @ForeignKey(entity = SshKeyEntity.class, parentColumns = "id", childColumns = "privateKeyId")
+        tableName = "servers"
 )
 public class ServerEntity {
     @PrimaryKey(autoGenerate = true)

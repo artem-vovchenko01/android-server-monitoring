@@ -90,4 +90,8 @@ dependencies {
 
     // Jetpack Compose Integration
     implementation "androidx.navigation:navigation-compose:$nav_version"
+
+    implementation 'androidx.documentfile:documentfile:1.0.1'
+
+    implementation 'com.google.code.gson:gson:2.10.1'
 }

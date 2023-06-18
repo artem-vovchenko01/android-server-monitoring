@@ -1,8 +1,6 @@
 package com.example.servermonitor.fragment;
 
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -15,7 +13,6 @@ import androidx.navigation.Navigation;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
@@ -23,26 +20,15 @@ import com.example.servermonitor.databinding.FragmentServerBinding;
 import com.example.servermonitor.db.Converters;
 import com.example.servermonitor.db.ServerDatabase;
 import com.example.servermonitor.db.entity.MonitoringRecordEntity;
-import com.example.servermonitor.db.entity.MonitoringSessionEntity;
+import com.example.servermonitor.model.MonitoringSessionModel;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.service.LineChartStyler;
-import com.example.servermonitor.service.MonitoringRecordService;
+import com.example.servermonitor.service.MonitoringSessionService;
 import com.example.servermonitor.service.PieChartStyler;
-import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.components.Description;
-import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.data.PieData;
-import com.github.mikephil.charting.data.PieDataSet;
-import com.github.mikephil.charting.data.PieEntry;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -50,12 +36,12 @@ import java.util.concurrent.TimeUnit;
 public class ServerFragment extends Fragment {
     private static int COLOR_LIGHT_YELLOW;
     private static int COLOR_GREEN;
-    private static int CHART_REFRESH_INTERVAL = 3;
     private FragmentServerBinding binding;
     private MainActivity activity;
     private Context context;
     private ServerDatabase database;
     private ServerModel serverModel;
+    private MonitoringSessionService monitoringSessionService;
     private PieChartStyler pieChartStyler;
     private LineChartStyler lineChartStyler;
 
@@ -71,9 +57,11 @@ public class ServerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         binding = FragmentServerBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
+        activity.serverFragment = this;
+        database = MainActivity.database;
+        monitoringSessionService = new MonitoringSessionService(database);
         activity.getSupportActionBar().setTitle("Server");
         context = activity.getApplicationContext();
         COLOR_LIGHT_YELLOW = ContextCompat.getColor(context, R.color.light_yellow);
@@ -88,13 +76,11 @@ public class ServerFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        database = MainActivity.database;
         pieChartStyler = new PieChartStyler("used", "total", COLOR_LIGHT_YELLOW, COLOR_GREEN);
         lineChartStyler = new LineChartStyler();
         getServerModel(getArguments());
         updateMonitoringUiComponents();
         setupOnClickListeners();
-        monitorServer();
     }
 
     public void setupOnClickListeners() {
@@ -120,6 +106,13 @@ public class ServerFragment extends Fragment {
             NavController controller = Navigation.findNavController(binding.getRoot());
             controller.navigate(R.id.browseServerFilesFragment, args);
         });
+
+        binding.btnMonitoringHistory.setOnClickListener(v -> {
+            NavController controller = Navigation.findNavController(binding.getRoot());
+            Bundle args = new Bundle();
+            args.putParcelable("serverModel", serverModel);
+            controller.navigate(R.id.action_serverFragment_to_monitoringSessionsFragment, args);
+        });
     }
     public void updateMonitoringUiComponents() {
         if (serverModel.getMonitoringSessionId() == -1) {
@@ -127,41 +120,42 @@ public class ServerFragment extends Fragment {
         } else {
             binding.btnChangeMonitoringState.setText("Stop monitoring session");
         }
+        new Thread(() -> {
+            updatePieCharts();
+            updateLineCharts();
+        }).start();
     }
     public void saveMonitoringSessionToDb() {
         new Thread(() -> {
             int sessionId = serverModel.getMonitoringSessionId();
             serverModel.setMonitoringSessionId(-1);
-            MonitoringSessionEntity sessionEntity = database.getMonitoringSessionDao().getMonitoringSession(sessionId);
-            sessionEntity.dateEnded = Converters.dateToTimestamp(Calendar.getInstance().getTime());
-            database.getMonitoringSessionDao().updateMonitoringSession(sessionEntity);
+            MonitoringSessionModel session = monitoringSessionService.getMonitoringSessionModelById(sessionId);
+            session.setDateEnded(Calendar.getInstance().getTime());
+            monitoringSessionService.updateMonitoringSession(session);
+            updateLineCharts();
         }).start();
     }
     public void startNewMonitoringSession() {
         new Thread(() -> {
-            MonitoringSessionEntity sessionEntity = new MonitoringSessionEntity();
+            MonitoringSessionModel session = new MonitoringSessionModel();
             Date currentTime = Calendar.getInstance().getTime();
-            sessionEntity.name = "session "
+            session.setName("session "
                     + currentTime.getHours()
                     + ":" + currentTime.getMinutes()
                     + " " + currentTime.getDay()
                     + "." + currentTime.getMonth()
-                    + "." + currentTime.getYear();
-            sessionEntity.dateStarted = Converters.dateToTimestamp(currentTime);
-            database.getMonitoringSessionDao().addMonitoringSession(sessionEntity);
-            sessionEntity = database.getMonitoringSessionDao().getMonitoringSessionByStartTime(Converters.dateToTimestamp(currentTime));
-            sessionEntity.serverId = serverModel.getId();
-            serverModel.setMonitoringSessionId(sessionEntity.id);
+                    + "." + currentTime.getYear());
+            session.setDateStarted(currentTime);
+            session.setServerId(serverModel.getId());
+            monitoringSessionService.addMonitoringSession(session);
+            session = monitoringSessionService.getMonitoringSessionByStartTime(currentTime);
+            serverModel.setMonitoringSessionId(session.getId());
+            activity.runOnUiThread(() -> {
+                setLineChartsVisible();
+            });
         }).start();
     }
 
-    public void monitorServer() {
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        executor.scheduleAtFixedRate(() -> {
-            updatePieCharts();
-            updateLineCharts();
-        }, 0, CHART_REFRESH_INTERVAL, TimeUnit.SECONDS);
-    }
     public void updatePieCharts() {
         float memoryUsed = serverModel.getMemoryUsedMb();
         float memoryTotal = serverModel.getMemoryTotalMb();
@@ -182,11 +176,16 @@ public class ServerFragment extends Fragment {
     }
     public void updateLineCharts() {
         int sessionId = serverModel.getMonitoringSessionId();
-        MonitoringSessionEntity session = database.getMonitoringSessionDao().getMonitoringSession(sessionId);
-        ArrayList<MonitoringRecordEntity> monitoringRecords = new ArrayList<>(database.getMonitoringRecordDao().getAllByMonitoringSessionId(sessionId));
-        if (sessionId == -1 || monitoringRecords.size() == 0) {
-            activity.runOnUiThread(() -> setLineChartsHidden());
+        if (sessionId == -1) {
+            activity.runOnUiThread(() -> {
+                setLineChartsHidden();
+                lineChartStyler.styleLineChart(binding.lcMemory, new ArrayList<>(), LineChartStyler.LineChartDataType.DATA_MEMORY, null);
+                lineChartStyler.styleLineChart(binding.lcCpu, new ArrayList<>(), LineChartStyler.LineChartDataType.DATA_CPU, null);
+                lineChartStyler.styleLineChart(binding.lcStorage, new ArrayList<>(), LineChartStyler.LineChartDataType.DATA_DISK, null);
+            });
         } else {
+            MonitoringSessionModel session = monitoringSessionService.getMonitoringSessionModelById(sessionId);
+            ArrayList<MonitoringRecordEntity> monitoringRecords = new ArrayList<>(database.getMonitoringRecordDao().getAllByMonitoringSessionId(sessionId));
             activity.runOnUiThread(() -> {
                 lineChartStyler.styleLineChart(binding.lcMemory, monitoringRecords, LineChartStyler.LineChartDataType.DATA_MEMORY, session);
                 lineChartStyler.styleLineChart(binding.lcCpu, monitoringRecords, LineChartStyler.LineChartDataType.DATA_CPU, session);
@@ -203,11 +202,17 @@ public class ServerFragment extends Fragment {
         binding.lcMemory.setVisibility(View.VISIBLE);
         binding.lcCpu.setVisibility(View.VISIBLE);
         binding.lcStorage.setVisibility(View.VISIBLE);
+        binding.tvForLcCpu.setVisibility(View.VISIBLE);
+        binding.tvForLcMemory.setVisibility(View.VISIBLE);
+        binding.tvForLcDisk.setVisibility(View.VISIBLE);
     }
     public void setLineChartsHidden() {
         binding.lcMemory.setVisibility(View.GONE);
         binding.lcCpu.setVisibility(View.GONE);
         binding.lcStorage.setVisibility(View.GONE);
+        binding.tvForLcCpu.setVisibility(View.GONE);
+        binding.tvForLcMemory.setVisibility(View.GONE);
+        binding.tvForLcDisk.setVisibility(View.GONE);
     }
     public void setPieChartsVisible() {
         binding.pcMemory.invalidate();
@@ -227,5 +232,17 @@ public class ServerFragment extends Fragment {
         binding.tvLabelCpuNoData.setVisibility(View.VISIBLE);
         binding.pcDisk.setVisibility(View.GONE);
         binding.tvLabelDiskNoData.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        activity.serverFragment = null;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        activity.serverFragment = this;
     }
 }

@@ -6,9 +6,7 @@ import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(
-        tableName = "monitoringSessions",
-        foreignKeys =
-        @ForeignKey(entity = ServerEntity.class, parentColumns = "id", childColumns = "serverId")
+        tableName = "monitoringSessions"
 )
 public class MonitoringSessionEntity {
     @PrimaryKey(autoGenerate = true)
@@ -16,13 +14,13 @@ public class MonitoringSessionEntity {
     public String name;
     public long dateStarted;
     public long dateEnded;
-    public long serverId;
+    public int serverId;
     public MonitoringSessionEntity() {
 
     }
 
     @Ignore
-    public MonitoringSessionEntity(int id, String name, long dateStarted, long dateEnded, long serverId) {
+    public MonitoringSessionEntity(int id, String name, long dateStarted, long dateEnded, int serverId) {
         this.id = id;
         this.name = name;
         this.dateStarted = dateStarted;

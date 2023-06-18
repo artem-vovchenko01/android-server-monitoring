@@ -6,9 +6,7 @@ import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(
-        tableName = "monitoringRecords",
-        foreignKeys =
-        @ForeignKey(entity = MonitoringSessionEntity.class, parentColumns = "id", childColumns = "monitoringSessionId")
+        tableName = "monitoringRecords"
 )
 public class MonitoringRecordEntity {
     @PrimaryKey(autoGenerate = true)

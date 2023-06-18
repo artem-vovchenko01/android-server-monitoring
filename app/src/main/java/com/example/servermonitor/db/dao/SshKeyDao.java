@@ -20,6 +20,8 @@ public interface SshKeyDao {
 
     @Delete
     void deleteSshKey(SshKeyEntity sshKeyEntity);
+    @Query("delete from sshKeys")
+    void deleteAllSshKeys();
 
     @Query("delete from sshKeys where id == :id")
     void deleteSshKeyById(int id);

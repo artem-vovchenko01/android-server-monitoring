@@ -20,6 +20,8 @@ public interface MonitoringRecordDao {
 
     @Delete
     void deleteMonitoringRecord(MonitoringRecordEntity monitoringRecordEntity);
+    @Query("delete from monitoringRecords")
+    void deleteAllMonitoringRecords();
 
     @Query("select * from monitoringRecords")
     List<MonitoringRecordEntity> getAllMonitoringRecords();

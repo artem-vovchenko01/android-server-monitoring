@@ -20,9 +20,14 @@ public interface MonitoringSessionDao {
 
     @Delete
     void deleteMonitoringSession(MonitoringSessionEntity monitoringRecordEntity);
+    @Query("delete from monitoringSessions")
+    void deleteAllMonitoringSessions();
 
     @Query("select * from monitoringSessions")
     List<MonitoringSessionEntity> getAllMonitoringSessions();
+
+    @Query("select * from monitoringSessions where serverId == :serverId")
+    List<MonitoringSessionEntity> getMonitoringSessionsByServerId(int serverId);
 
     @Query("select * from monitoringSessions where id == :id")
     MonitoringSessionEntity getMonitoringSession(int id);
