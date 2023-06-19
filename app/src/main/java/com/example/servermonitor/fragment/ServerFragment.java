@@ -26,6 +26,7 @@ import com.example.servermonitor.service.LineChartStyler;
 import com.example.servermonitor.service.MonitoringSessionService;
 import com.example.servermonitor.service.PieChartStyler;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -146,12 +147,9 @@ public class ServerFragment extends Fragment {
         new Thread(() -> {
             MonitoringSessionModel session = new MonitoringSessionModel();
             Date currentTime = Calendar.getInstance().getTime();
-            session.setName("session "
-                    + currentTime.getHours()
-                    + ":" + currentTime.getMinutes()
-                    + " " + currentTime.getDay()
-                    + "." + currentTime.getMonth()
-                    + "." + currentTime.getYear());
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String dateString = formatter.format(currentTime);
+            session.setName("session " + dateString);
             session.setDateStarted(currentTime);
             session.setServerId(serverModel.getId());
             monitoringSessionService.addMonitoringSession(session);
@@ -186,17 +184,17 @@ public class ServerFragment extends Fragment {
         if (sessionId == -1) {
             activity.runOnUiThread(() -> {
                 setLineChartsHidden();
-                lineChartStyler.styleLineChart(binding.lcMemory, new ArrayList<>(), LineChartStyler.LineChartDataType.DATA_MEMORY, null);
-                lineChartStyler.styleLineChart(binding.lcCpu, new ArrayList<>(), LineChartStyler.LineChartDataType.DATA_CPU, null);
-                lineChartStyler.styleLineChart(binding.lcStorage, new ArrayList<>(), LineChartStyler.LineChartDataType.DATA_DISK, null);
+                lineChartStyler.styleLineChart(binding.lcMemory, new ArrayList<>(), LineChartStyler.LineChartDataType.DATA_MEMORY, null, true);
+                lineChartStyler.styleLineChart(binding.lcCpu, new ArrayList<>(), LineChartStyler.LineChartDataType.DATA_CPU, null, true);
+                lineChartStyler.styleLineChart(binding.lcStorage, new ArrayList<>(), LineChartStyler.LineChartDataType.DATA_DISK, null, true);
             });
         } else {
             MonitoringSessionModel session = monitoringSessionService.getMonitoringSessionModelById(sessionId);
             ArrayList<MonitoringRecordEntity> monitoringRecords = new ArrayList<>(database.getMonitoringRecordDao().getAllByMonitoringSessionId(sessionId));
             activity.runOnUiThread(() -> {
-                lineChartStyler.styleLineChart(binding.lcMemory, monitoringRecords, LineChartStyler.LineChartDataType.DATA_MEMORY, session);
-                lineChartStyler.styleLineChart(binding.lcCpu, monitoringRecords, LineChartStyler.LineChartDataType.DATA_CPU, session);
-                lineChartStyler.styleLineChart(binding.lcStorage, monitoringRecords, LineChartStyler.LineChartDataType.DATA_DISK, session);
+                lineChartStyler.styleLineChart(binding.lcMemory, monitoringRecords, LineChartStyler.LineChartDataType.DATA_MEMORY, session, true);
+                lineChartStyler.styleLineChart(binding.lcCpu, monitoringRecords, LineChartStyler.LineChartDataType.DATA_CPU, session, true);
+                lineChartStyler.styleLineChart(binding.lcStorage, monitoringRecords, LineChartStyler.LineChartDataType.DATA_DISK, session, true);
                 setLineChartsVisible();
             });
         }

@@ -53,6 +53,7 @@ public class MonitoringSessionFragment extends Fragment {
         database = MainActivity.database;
         lineChartStyler = new LineChartStyler();
         getMonitoringSessionModel(getArguments());
+        activity.getSupportActionBar().setTitle(monitoringSession.getName());
         setupOnClickListeners();
         new Thread(() -> {
             updateLineCharts();
@@ -70,9 +71,9 @@ public class MonitoringSessionFragment extends Fragment {
         ArrayList<MonitoringRecordEntity> monitoringRecords = new ArrayList<>(database.getMonitoringRecordDao().getAllByMonitoringSessionId(monitoringSession.getId()));
         if (monitoringRecords.size() > 0) {
             activity.runOnUiThread(() -> {
-                lineChartStyler.styleLineChart(binding.lcMemory, monitoringRecords, LineChartStyler.LineChartDataType.DATA_MEMORY, monitoringSession);
-                lineChartStyler.styleLineChart(binding.lcCpu, monitoringRecords, LineChartStyler.LineChartDataType.DATA_CPU, monitoringSession);
-                lineChartStyler.styleLineChart(binding.lcStorage, monitoringRecords, LineChartStyler.LineChartDataType.DATA_DISK, monitoringSession);
+                lineChartStyler.styleLineChart(binding.lcMemory, monitoringRecords, LineChartStyler.LineChartDataType.DATA_MEMORY, monitoringSession, false);
+                lineChartStyler.styleLineChart(binding.lcCpu, monitoringRecords, LineChartStyler.LineChartDataType.DATA_CPU, monitoringSession, false);
+                lineChartStyler.styleLineChart(binding.lcStorage, monitoringRecords, LineChartStyler.LineChartDataType.DATA_DISK, monitoringSession, false);
                 binding.lcCpu.invalidate();
                 binding.lcMemory.invalidate();
                 binding.lcStorage.invalidate();

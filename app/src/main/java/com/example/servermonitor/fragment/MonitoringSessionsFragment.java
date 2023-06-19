@@ -40,7 +40,7 @@ public class MonitoringSessionsFragment extends Fragment {
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         activity = (MainActivity) getActivity();
-        activity.getSupportActionBar().setTitle(R.string.fragment_ssh_keys_title);
+        activity.getSupportActionBar().setTitle("Monitoring sessions");
     }
 
     public MonitoringSessionsFragment() {
@@ -69,6 +69,9 @@ public class MonitoringSessionsFragment extends Fragment {
             monitoringSessions = monitoringSessionService.getMonitoringSessionsByServerId(server.getId());
             adapter = new MonitoringSessionsAdapter(context, monitoringSessions, activity);
             binding.rvMonitoringSessions.setAdapter(adapter);
+            activity.runOnUiThread(() -> {
+                activity.getSupportActionBar().setTitle("Monitoring sessions (" + server.getName() + ")");
+            });
         }).start();
         return binding.getRoot();
     }
@@ -92,7 +95,6 @@ public class MonitoringSessionsFragment extends Fragment {
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         int pposition = adapter.selectedItemPosition;
-
         switch (item.getTitle().toString()) {
             case "Delete":
                 new Thread(() -> {

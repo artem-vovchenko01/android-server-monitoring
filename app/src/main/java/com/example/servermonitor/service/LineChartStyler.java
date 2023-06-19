@@ -7,6 +7,7 @@ import com.example.servermonitor.db.entity.MonitoringRecordEntity;
 import com.example.servermonitor.model.MonitoringSessionModel;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
@@ -23,36 +24,35 @@ public class LineChartStyler {
         DATA_DISK
     }
 
-    public void styleLineChart(LineChart lineChart, ArrayList<MonitoringRecordEntity> monitoringData, LineChartDataType lineChartDataType, MonitoringSessionModel session) {
+    public void styleLineChart(LineChart lineChart, ArrayList<MonitoringRecordEntity> monitoringData, LineChartDataType lineChartDataType, MonitoringSessionModel session, boolean activelyUpdating) {
         List<Entry> entryList = null;
         switch (lineChartDataType) {
             case DATA_MEMORY:
                 entryList = getDataForMemoryLineChart(monitoringData, session);
-                configureLineChart(monitoringData, lineChartDataType, lineChart, entryList);
+                configureLineChart(monitoringData, lineChartDataType, lineChart, entryList, activelyUpdating);
                 break;
             case DATA_CPU:
                 entryList = getDataForCpuLineChart(monitoringData, session);
-                configureLineChart(monitoringData, lineChartDataType, lineChart, entryList);
+                configureLineChart(monitoringData, lineChartDataType, lineChart, entryList, activelyUpdating);
                 break;
             case DATA_DISK:
                 entryList = getDataForDiskLineChart(monitoringData, session);
-                configureLineChart(monitoringData, lineChartDataType, lineChart, entryList);
+                configureLineChart(monitoringData, lineChartDataType, lineChart, entryList, activelyUpdating);
                 break;
         }
     }
-    public void configureLineChart(ArrayList<MonitoringRecordEntity> records, LineChartDataType type, LineChart lc, List<Entry> data) {
+    public void configureLineChart(ArrayList<MonitoringRecordEntity> records, LineChartDataType type, LineChart lc, List<Entry> data, boolean activelyUpdating) {
         LineDataSet dataSet = new LineDataSet(data, "");
         styleLineChartDataSet(dataSet);
         lc.setData(new LineData(dataSet));
-        customizeLineChart(records, type, lc, dataSet);
+        customizeLineChart(records, type, lc, dataSet, activelyUpdating);
     }
-    public void customizeLineChart(ArrayList<MonitoringRecordEntity> records, LineChartDataType type, LineChart lc, LineDataSet lineData) {
-        lc.getXAxis().setEnabled(false);
+    public void customizeLineChart(ArrayList<MonitoringRecordEntity> records, LineChartDataType type, LineChart lc, LineDataSet lineData, boolean activelyUpdating) {
         lc.getAxisRight().setEnabled(false);
+        // lc.getXAxis().setEnabled(true);
 
-        lc.getXAxis().setSpaceMin(0.5f);
-        lc.getXAxis().setSpaceMax(0.5f);
-        lc.getXAxis().setEnabled(true);
+        //lc.getXAxis().setSpaceMin(0.5f);
+        //lc.getXAxis().setSpaceMax(0.5f);
         lc.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
 
         //lc.setDragEnabled(true);
@@ -61,18 +61,29 @@ public class LineChartStyler {
         List<Float> minAdnMaxX = getMinAndMaxX(lineData);
         float startX = minAdnMaxX.get(0);
         float endX = minAdnMaxX.get(1);
+        if (activelyUpdating) {
+            lc.getXAxis().setAxisMinimum(startX);
+            lc.getXAxis().setAxisMaximum(endX);
+        } else {
+            lc.moveViewToX(startX);
+            lc.setMaxVisibleValueCount(20);
+        }
 
-        lc.getXAxis().setAxisMinimum(startX);
-        lc.getXAxis().setAxisMaximum(endX);
+        lc.setVisibleXRangeMaximum(20);
+        //lc.moveViewToX(startX);
+
+        lc.setNoDataTextColor(Color.BLUE);
 
         if (records.size() > 0) {
             setYAxisRange(records, type, lc);
         }
 
         Description description = new Description();
-        description.setText("Sec");
+        description.setText("Seconds");
         lc.setDescription(description);
-        lc.setTouchEnabled(false);
+        lc.setTouchEnabled(true);
+        Legend legend = lc.getLegend();
+        legend.setEnabled(false);
     }
     private void setYAxisRange(ArrayList<MonitoringRecordEntity> records, LineChartDataType type, LineChart lc) {
         MonitoringRecordEntity record = records.get(0);

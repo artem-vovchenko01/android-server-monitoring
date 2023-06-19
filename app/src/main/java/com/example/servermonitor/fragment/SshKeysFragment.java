@@ -127,7 +127,7 @@ public class SshKeysFragment extends Fragment {
                 new Thread(() -> {
                     sshKeyService.deleteSshKey(sshKeys.get(pposition));
                     sshKeys.remove(pposition);
-                    activity.runOnUiThread(() -> adapter.notifyItemRemoved(pposition));
+                    activity.runOnUiThread(() -> adapter.notifyDataSetChanged());
                 }).start();
                 break;
         }

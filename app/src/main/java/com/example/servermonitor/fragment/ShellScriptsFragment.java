@@ -129,7 +129,7 @@ public class ShellScriptsFragment extends Fragment {
                 new Thread(() -> {
                     shellScriptService.deleteShellScript(shellScripts.get(position));
                     shellScripts.remove(position);
-                    activity.runOnUiThread(() -> adapter.notifyItemRemoved(position));
+                    activity.runOnUiThread(() -> adapter.notifyDataSetChanged());
                 }).start();
                 break;
         }

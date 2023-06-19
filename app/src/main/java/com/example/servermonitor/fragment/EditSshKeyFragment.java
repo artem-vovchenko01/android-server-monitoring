@@ -84,13 +84,13 @@ public class EditSshKeyFragment extends Fragment {
             NavController controller = Navigation.findNavController(binding.getRoot());
             Bundle args = getResultBundle();
             args.putInt("success", 1);
-            controller.navigate(R.id.sshKeysFragment, args);
+            controller.navigate(R.id.action_editSshKeyFragment_to_sshKeysFragment, args);
         });
         binding.btnCancel.setOnClickListener(v -> {
             NavController controller = Navigation.findNavController(binding.getRoot());
             Bundle args = new Bundle();
             args.putInt("success", 0);
-            controller.navigate(R.id.sshKeysFragment, args);
+            controller.navigate(R.id.action_editSshKeyFragment_to_sshKeysFragment, args);
         });
     }
 }

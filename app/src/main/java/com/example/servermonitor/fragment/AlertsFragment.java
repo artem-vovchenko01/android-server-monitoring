@@ -120,7 +120,7 @@ public class AlertsFragment extends Fragment {
                     alertService.deleteAlert(alerts.get(pposition));
                     alerts.remove(pposition);
                     activity.alerts.remove(pposition);
-                    activity.runOnUiThread(() -> adapter.notifyItemRemoved(pposition));
+                    activity.runOnUiThread(() -> adapter.notifyDataSetChanged());
                 }).start();
                 break;
         }

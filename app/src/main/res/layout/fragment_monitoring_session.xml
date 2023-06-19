@@ -23,20 +23,46 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
+                <TextView
+                    android:textSize="24sp"
+                    android:text="Memory (MB)"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    />
+
                 <com.github.mikephil.charting.charts.LineChart
                     android:id="@+id/lcMemory"
                     android:layout_width="match_parent"
-                    android:layout_height="100dp" />
+                    android:layout_height="180dp"
+                    android:minWidth="410dp"
+                    />
+
+                <TextView
+                    android:textSize="24sp"
+                    android:text="CPU (%)"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    />
 
                 <com.github.mikephil.charting.charts.LineChart
                     android:id="@+id/lcCpu"
                     android:layout_width="match_parent"
-                    android:layout_height="100dp" />
+                    android:layout_height="180dp" />
+
+                <TextView
+                    android:textSize="24sp"
+                    android:text="Disk (MB)"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    />
 
                 <com.github.mikephil.charting.charts.LineChart
                     android:id="@+id/lcStorage"
                     android:layout_width="match_parent"
-                    android:layout_height="100dp" />
+                    android:layout_height="180dp" />
 
             </LinearLayout>
         </ScrollView>

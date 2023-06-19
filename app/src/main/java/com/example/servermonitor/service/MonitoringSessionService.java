@@ -8,6 +8,7 @@ import com.example.servermonitor.mapper.MonitoringSessionMapper;
 import com.example.servermonitor.model.MonitoringSessionModel;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 
 public class MonitoringSessionService {
@@ -37,6 +38,7 @@ public class MonitoringSessionService {
         for (MonitoringSessionEntity entity : monitoringSessionDao.getMonitoringSessionsByServerId(serverId)) {
             monitoringSessions.add(MonitoringSessionMapper.monitoringSessionEntityToModel(entity));
         }
+        monitoringSessions.sort((first, second) -> second.getDateStarted().compareTo(first.getDateStarted()));
         return monitoringSessions;
     }
 

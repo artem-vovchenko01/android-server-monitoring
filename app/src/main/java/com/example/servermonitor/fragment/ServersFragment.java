@@ -121,7 +121,7 @@ public class ServersFragment extends Fragment {
                     serverService.deleteServer(server);
                     activity.serverModels.remove(pposition);
                     activity.stopJobForServer(server);
-                    activity.runOnUiThread(() -> serverAdapter.notifyItemRemoved(pposition));
+                    activity.runOnUiThread(() -> serverAdapter.notifyDataSetChanged());
                 }).start();
                 break;
             case "Reboot":

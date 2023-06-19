@@ -58,7 +58,11 @@
         android:id="@+id/editSshKeyFragment"
         android:name="com.example.servermonitor.fragment.EditSshKeyFragment"
         android:label="fragment_edit_ssh_key"
-        tools:layout="@layout/fragment_edit_ssh_key" />
+        tools:layout="@layout/fragment_edit_ssh_key" >
+        <action
+            android:id="@+id/action_editSshKeyFragment_to_sshKeysFragment"
+            app:destination="@id/sshKeysFragment" />
+    </fragment>
     <fragment
         android:id="@+id/shellScriptsFragment"
         android:name="com.example.servermonitor.fragment.ShellScriptsFragment"
