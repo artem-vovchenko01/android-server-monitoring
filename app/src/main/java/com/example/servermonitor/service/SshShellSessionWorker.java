@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.example.servermonitor.fragment.BrowseServerFilesFragment;
 import com.example.servermonitor.helper.FileLoadingProgressMonitor;
+import com.example.servermonitor.helper.FileOperations;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.model.SshKeyModel;
 import com.jcraft.jsch.ChannelExec;
@@ -254,6 +255,28 @@ public class SshShellSessionWorker implements AutoCloseable {
             try {
                 channelSftp.get(remotePath, localDirectory + "/" + remoteName, monitor);
             } catch (SftpException e) {}
+        }).start();
+        results.add(true);
+        results.add(monitor);
+        return results;
+    }
+    public List<Object> copyFromServerUsingStreams(String remotePath, OutputStream os) {
+        ArrayList<Object> results = new ArrayList<>();
+        if (channelSftp == null) {
+            try {
+                channelSftp = (ChannelSftp) session.openChannel("sftp");
+                channelSftp.connect();
+            } catch (JSchException e) {
+                results.add(false);
+                return results;
+            }
+        }
+        FileLoadingProgressMonitor monitor = new FileLoadingProgressMonitor();
+        new Thread(() -> {
+            try {
+                InputStream is = channelSftp.get(remotePath, monitor);
+                FileOperations.copyDataBetweenStreams(is, os);
+            } catch (Exception e) {}
         }).start();
         results.add(true);
         results.add(monitor);

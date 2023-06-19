@@ -13,9 +13,11 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.databinding.FragmentManageDataBinding;
+import com.example.servermonitor.helper.UiHelper;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.service.DatabaseExporter;
 
@@ -25,6 +27,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
 
 public class ManageDataFragment extends Fragment {
     private static final int REQUEST_CODE_CREATE_DOCUMENT = 25;
@@ -47,13 +54,19 @@ public class ManageDataFragment extends Fragment {
             new Thread(() -> {
                 databaseExporter.clearDatabase();
                 clearDataOnMainActivity();
+                activity.runOnUiThread(() -> {
+                    Toast.makeText(context, "Database successfully cleared", Toast.LENGTH_LONG).show();
+                });
             }).start();
         });
         binding.importDb.setOnClickListener((v) -> {
-            openFilePicker();
+            UiHelper.openFilePicker(this);
         });
         binding.exportDb.setOnClickListener((v) -> {
-            createFilePicker();
+            Date currentTime = Calendar.getInstance().getTime();
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+            String fileName = "serverMonitorExport_" + formatter.format(currentTime);
+            UiHelper.createFilePicker(this, "application/json", fileName);
         });
     }
     public void clearDataOnMainActivity() {
@@ -108,6 +121,9 @@ public class ManageDataFragment extends Fragment {
             if (uri != null) {
                 new Thread(() -> {
                     writeFile(uri);
+                    activity.runOnUiThread(() -> {
+                        Toast.makeText(context, "Data successfully exported", Toast.LENGTH_LONG).show();
+                    });
                 }).start();
             }
         }
@@ -119,6 +135,10 @@ public class ManageDataFragment extends Fragment {
                     clearDataOnMainActivity();
                     databaseExporter.importDatabaseData(resultContent);
                     activity.initializeData();
+                    int serversCount = activity.serverModels.size();
+                    activity.runOnUiThread(() -> {
+                        Toast.makeText(context, "Successfully imported data, including " + serversCount + " servers", Toast.LENGTH_LONG).show();
+                    });
                 }).start();
             }
         }
@@ -137,21 +157,5 @@ public class ManageDataFragment extends Fragment {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private void createFilePicker() {
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("text/plain");
-        intent.putExtra(Intent.EXTRA_TITLE, "serverMonitorExport.json");
-
-        startActivityForResult(intent, REQUEST_CODE_CREATE_DOCUMENT);
-    }
-    private void openFilePicker() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("*/*");
-
-        startActivityForResult(intent, REQUEST_CODE_OPEN_DOCUMENT);
     }
 }

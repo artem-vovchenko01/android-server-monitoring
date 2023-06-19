@@ -1,6 +1,10 @@
 package com.example.servermonitor.fragment;
 
+import static android.app.Activity.RESULT_OK;
+
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -36,11 +40,16 @@ import com.example.servermonitor.service.SshKeyService;
 import com.example.servermonitor.service.SshShellSessionWorker;
 import com.jcraft.jsch.ChannelSftp;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
 
 public class BrowseServerFilesFragment extends Fragment {
+    private static final int REQUEST_CODE_CREATE_DOCUMENT = 25;
+    private static final int REQUEST_CODE_OPEN_DOCUMENT = 1;
     private FragmentBrowseServerFilesBinding binding;
     private Vector<ChannelSftp.LsEntry> lsEntries;
     private ServerFilesAdapter adapter;
@@ -52,6 +61,7 @@ public class BrowseServerFilesFragment extends Fragment {
     public String currentPath;
     private String homePath;
     private ServerModel server;
+    private ChannelSftp.LsEntry fileToSave;
 
     public BrowseServerFilesFragment() {
         // Required empty public constructor
@@ -195,6 +205,10 @@ public class BrowseServerFilesFragment extends Fragment {
                     }
                 }).start();
                 break;
+            case "Save as":
+                fileToSave = entry;
+                UiHelper.createFilePicker(this, "*/*", entry.getFilename());
+                break;
             case "Delete":
                 new Thread(() -> {
                     Boolean deleted = shellSessionWorker.sftpRm(entry.getFilename());
@@ -210,6 +224,48 @@ public class BrowseServerFilesFragment extends Fragment {
         }
         return super.onContextItemSelected(item);
     }
+    private void writeFile(Uri uri) {
+        try {
+            OutputStream outputStream = activity.getContentResolver().openOutputStream(uri);
+            if (outputStream != null) {
+                new Thread(() -> {
+                    List<Object> results = shellSessionWorker.copyFromServerUsingStreams(currentPath + "/" + fileToSave.getFilename(), outputStream);
+                    if (!(boolean) results.get(0)) {
+                        activity.runOnUiThread(() ->
+                                Toast.makeText(context, "Download failed", Toast.LENGTH_LONG).show());
+                    } else {
+                        FileLoadingProgressMonitor monitor = (FileLoadingProgressMonitor) results.get(1);
+                        UiHelper.monitorProgress(getContext(), activity, monitor, () -> null);
+                    }
+                }).start();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_CREATE_DOCUMENT && resultCode == RESULT_OK && data != null) {
+            Uri uri = data.getData();
+            if (uri != null) {
+                new Thread(() -> {
+                    writeFile(uri);
+                }).start();
+            }
+        }
+        if (requestCode == REQUEST_CODE_OPEN_DOCUMENT && resultCode == RESULT_OK && data != null) {
+            Uri uri = data.getData();
+            if (uri != null) {
+                new Thread(() -> {
+                }).start();
+            }
+        }
+    }
+
 
     private void showPopupMenu(View view) {
         PopupMenu popupMenu = new PopupMenu(getContext(), view);

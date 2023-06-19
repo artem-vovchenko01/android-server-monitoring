@@ -1,9 +1,11 @@
 package com.example.servermonitor.helper;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
 import android.view.LayoutInflater;
@@ -23,6 +25,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class UiHelper {
+    private static final int REQUEST_CODE_CREATE_DOCUMENT = 25;
+    private static final int REQUEST_CODE_OPEN_DOCUMENT = 1;
     public static void actOnStringInputFromDialog(Context context, View dialogView, String title, DialogInterface.OnClickListener listener) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setView(dialogView)
@@ -104,5 +108,19 @@ public class UiHelper {
                 function.get();
             }).start();
         });
+    }
+
+    public static void createFilePicker(Fragment fragment, String type, String fileName) {
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType(type);
+        intent.putExtra(Intent.EXTRA_TITLE, fileName);
+        fragment.startActivityForResult(intent, REQUEST_CODE_CREATE_DOCUMENT);
+    }
+    public static void openFilePicker(Fragment fragment) {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        fragment.startActivityForResult(intent, REQUEST_CODE_OPEN_DOCUMENT);
     }
 }

@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 public class FileOperations {
     public static String remoteFileToCopy = null;
@@ -58,6 +59,23 @@ public class FileOperations {
                 outputStream.close();
             }
             inputStream.close();
+        }
+    }
+
+    public static void copyDataBetweenStreams(InputStream is, OutputStream os) throws IOException {
+        try {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = is.read(buffer)) != -1) {
+                os.write(buffer, 0, bytesRead);
+            }
+            os.flush();
+        }
+        finally {
+            if (os != null) {
+                os.close();
+            }
+            is.close();
         }
     }
 }
