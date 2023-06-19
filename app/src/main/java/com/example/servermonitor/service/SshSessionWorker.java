@@ -34,6 +34,7 @@ public class SshSessionWorker implements AutoCloseable {
     private static String DISK_USED_MB_COMMAND = "df -mP / | tail -n -1 | awk '{print $3}';";
     private static String DISK_TOTAL_MB_COMMAND = "df -mP / | tail -n -1 | awk '{print $2}';";
     private static String CPU_USAGE_COMMAND = "top -bn 1 | grep '%Cpu' | awk '{print $2 + $4}';";
+    private ChannelExec currentlyExecutingCommand = null;
     public SshSessionWorker(Context context, ServerModel server, Optional<SshKeyModel> sshKey) throws Exception {
         this.context = context;
         this.server = server;
@@ -144,11 +145,14 @@ public class SshSessionWorker implements AutoCloseable {
     public String executeSingleCommand(String command) {
         String result = "";
         try {
+            if (currentlyExecutingCommand != null) currentlyExecutingCommand.disconnect();
             ChannelExec channelExec = (ChannelExec) session.openChannel("exec");
+            currentlyExecutingCommand = channelExec;
             channelExec.setCommand(command);
             channelExec.connect();
             result = readChannelOutput(channelExec);
             channelExec.disconnect();
+            currentlyExecutingCommand = null;
         } catch (JSchException e) {
             throw new RuntimeException(e);
         }

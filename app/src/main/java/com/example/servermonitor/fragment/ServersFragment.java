@@ -1,39 +1,21 @@
 package com.example.servermonitor.fragment;
 
-import static android.app.Activity.RESULT_OK;
-
-import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
-
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
-
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
 import com.example.servermonitor.service.SshSessionWorker;
@@ -41,14 +23,6 @@ import com.example.servermonitor.adapter.ServerAdapter;
 import com.example.servermonitor.databinding.FragmentServersBinding;
 import com.example.servermonitor.model.ServerModel;
 import com.example.servermonitor.service.ServerService;
-
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.util.Objects;
 
 public class ServersFragment extends Fragment {
     private FragmentServersBinding binding;
@@ -118,8 +92,8 @@ public class ServersFragment extends Fragment {
 
     public void setupOnClickListeners() {
         binding.fabAddServer.setOnClickListener(v -> {
-            // NavController controller = Navigation.findNavController(binding.getRoot());
-            // controller.navigate(R.id.action_serversFragment_to_editServerFragment);
+            NavController controller = Navigation.findNavController(binding.getRoot());
+            controller.navigate(R.id.action_serversFragment_to_editServerFragment);
         });
     }
 

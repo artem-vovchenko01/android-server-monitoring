@@ -113,6 +113,13 @@ public class ServerFragment extends Fragment {
             args.putParcelable("serverModel", serverModel);
             controller.navigate(R.id.action_serverFragment_to_monitoringSessionsFragment, args);
         });
+
+        binding.btnViewServices.setOnClickListener(v -> {
+            NavController controller = Navigation.findNavController(binding.getRoot());
+            Bundle args = new Bundle();
+            args.putParcelable("serverModel", serverModel);
+            controller.navigate(R.id.action_serverFragment_to_systemdServicesFragment, args);
+        });
     }
     public void updateMonitoringUiComponents() {
         if (serverModel.getMonitoringSessionId() == -1) {

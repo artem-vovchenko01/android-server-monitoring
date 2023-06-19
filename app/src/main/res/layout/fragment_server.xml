@@ -176,24 +176,33 @@
 
         <Button
             android:id="@+id/btnOpenTerminal"
-            android:layout_width="wrap_content"
+            android:layout_width="138dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
             android:text="Open terminal"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/btnBrowseFiles"
+            app:layout_constraintBottom_toBottomOf="parent"
+            />
+
+        <Button
+            android:id="@+id/btnViewServices"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:text="View services"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             />
 
         <Button
             android:id="@+id/btnBrowseFiles"
-            android:layout_width="wrap_content"
+            android:layout_width="138dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
             android:text="Browse files"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/btnOpenTerminal"
             />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

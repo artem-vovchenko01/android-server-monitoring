@@ -40,6 +40,9 @@
         <action
             android:id="@+id/action_serverFragment_to_monitoringSessionsFragment"
             app:destination="@id/monitoringSessionsFragment" />
+        <action
+            android:id="@+id/action_serverFragment_to_systemdServicesFragment"
+            app:destination="@id/systemdServicesFragment" />
     </fragment>
     <fragment
         android:id="@+id/terminalFragment"
@@ -120,4 +123,9 @@
         android:name="com.example.servermonitor.fragment.ManageDataFragment"
         android:label="fragment_manage_data"
         tools:layout="@layout/fragment_manage_data" />
+    <fragment
+        android:id="@+id/systemdServicesFragment"
+        android:name="com.example.servermonitor.fragment.SystemdServicesFragment"
+        android:label="fragment_systemd_services"
+        tools:layout="@layout/fragment_systemd_services" />
 </navigation>

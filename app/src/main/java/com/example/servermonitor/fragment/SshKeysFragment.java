@@ -74,7 +74,6 @@ public class SshKeysFragment extends Fragment {
             }
             getArguments().clear();
         }
-        Toast.makeText(context, "oncreateview", Toast.LENGTH_SHORT).show();
         return binding.getRoot();
     }
     public void addNewSshKey(SshKeyModel sshKey) {
