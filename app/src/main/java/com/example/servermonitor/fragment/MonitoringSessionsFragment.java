@@ -36,13 +36,6 @@ public class MonitoringSessionsFragment extends Fragment {
     private MonitoringSessionService monitoringSessionService;
     private ArrayList<MonitoringSessionModel> monitoringSessions;
 
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        activity = (MainActivity) getActivity();
-        activity.getSupportActionBar().setTitle("Monitoring sessions");
-    }
-
     public MonitoringSessionsFragment() {
         // Required empty public constructor
     }
@@ -57,6 +50,7 @@ public class MonitoringSessionsFragment extends Fragment {
                              Bundle savedInstanceState) {
         binding = FragmentMonitoringSessionsBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle("Monitoring sessions");
         context = activity.getApplicationContext();
         monitoringSessionService = new MonitoringSessionService(MainActivity.database);
         setupUiComponents();

@@ -81,10 +81,11 @@ public class UiHelper {
         return handler;
     }
     public static Boolean serverStillExists(MainActivity activity, ServerModel server) {
+        if (server == null) return true;
         return activity.serverModels.stream().anyMatch(s -> s.getId() == server.getId());
     }
 
-    public static void monitorProgress(Context context, MainActivity activity, FileLoadingProgressMonitor monitor, Supplier function) {
+    public static void monitorProgress(Context context, Activity activity, FileLoadingProgressMonitor monitor, Supplier function) {
         activity.runOnUiThread(() -> {
             Handler progressHandler = UiHelper.showProgressDialog(context);
             new Thread(() -> {
@@ -122,5 +123,11 @@ public class UiHelper {
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
         fragment.startActivityForResult(intent, REQUEST_CODE_OPEN_DOCUMENT);
+    }
+
+    public static void displayError(Activity activity, String text) {
+        activity.runOnUiThread(() -> {
+            Toast.makeText(activity.getApplicationContext(), text, Toast.LENGTH_LONG).show();
+        });
     }
 }

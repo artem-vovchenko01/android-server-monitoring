@@ -197,19 +197,32 @@ public class MainActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     serverModel.setConnected(false);
                     serverModel.setServerStatusImg(R.drawable.redcircle);
+                    serverSessions.remove(serverModel);
                     runOnUiThread(() -> {
                         if (serverAdapter != null)
-                            serverAdapter.notifyItemChanged(position);
+                            serverAdapter.notifyDataSetChanged();
                     });
                     return;
                 }
             }
+            serverModel.setConnected(true);
+            serverModel.setServerStatusImg(R.drawable.greencircle);
             MonitoringRecordEntity monitoringRecordEntity = worker.getMonitoringStats();
+            if (monitoringRecordEntity == null) {
+                serverModel.setConnected(false);
+                serverModel.setServerStatusImg(R.drawable.redcircle);
+                serverSessions.remove(serverModel);
+                runOnUiThread(() -> {
+                    if (serverAdapter != null)
+                        serverAdapter.notifyDataSetChanged();
+                });
+                return;
+            }
             checkAlertStatus(serverModel, monitoringRecordEntity);
             updateServerModel(position, serverModel, monitoringRecordEntity);
             runOnUiThread(() -> {
                 if (serverAdapter != null)
-                    serverAdapter.notifyItemChanged(position);
+                    serverAdapter.notifyDataSetChanged();
             });
         }, 0, MONITORING_INTERVAL, TimeUnit.SECONDS);
         scheduledJobs.put(serverModel, future);

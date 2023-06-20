@@ -11,20 +11,19 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="80dp"
         android:layout_marginStart="20dp"
+        android:layout_marginTop="80dp"
         android:layout_marginEnd="20dp"
-        android:textSize="20sp"
-        android:padding="10dp">
+        android:padding="10dp"
+        android:textSize="20sp">
 
         <TextView
-            android:text="Server name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/etServerName"
+            android:text="Server name"
             app:layout_constraintBottom_toBottomOf="@+id/etServerName"
-            />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/etServerName" />
 
         <EditText
             android:id="@+id/etServerName"
@@ -32,127 +31,116 @@
             android:layout_height="wrap_content"
             android:backgroundTint="@color/main_color"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:text="Host IP"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/etIp"
+            android:text="Host IP"
             app:layout_constraintBottom_toBottomOf="@+id/etIp"
-            />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/etIp" />
 
         <EditText
             android:id="@+id/etIp"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:backgroundTint="@color/main_color"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/etServerName"
-            android:layout_marginTop="10dp"
-            />
+            app:layout_constraintTop_toBottomOf="@+id/etServerName" />
 
         <TextView
-            android:text="Port"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/etPort"
+            android:text="Port"
             app:layout_constraintBottom_toBottomOf="@+id/etPort"
-            />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/etPort" />
 
         <EditText
             android:id="@+id/etPort"
-            android:text="22"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/main_color"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/etIp"
             android:layout_marginTop="10dp"
-            />
+            android:backgroundTint="@color/main_color"
+            android:text="22"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/etIp" />
 
         <TextView
-            android:text="Username"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/etUsername"
+            android:text="Username"
             app:layout_constraintBottom_toBottomOf="@+id/etUsername"
-            />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/etUsername" />
 
         <EditText
             android:id="@+id/etUsername"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:backgroundTint="@color/main_color"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/etPort"
-            android:layout_marginTop="10dp"
-            />
+            app:layout_constraintTop_toBottomOf="@+id/etPort" />
 
         <TextView
-            android:text="Password"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/etPassword"
+            android:text="Password"
             app:layout_constraintBottom_toBottomOf="@+id/etPassword"
-            />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/etPassword" />
 
         <EditText
             android:id="@+id/etPassword"
-            android:inputType="textPassword"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/main_color"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/etUsername"
             android:layout_marginTop="10dp"
-            />
+            android:backgroundTint="@color/main_color"
+            android:inputType="textPassword"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/etUsername" />
 
         <TextView
-            android:text="Private key"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/spinPrivateKey"
+            android:text="Private key"
             app:layout_constraintBottom_toBottomOf="@+id/spinPrivateKey"
-            />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/spinPrivateKey" />
 
         <Spinner
-            android:backgroundTint="@color/main_color"
             android:id="@+id/spinPrivateKey"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/etPassword"
             android:layout_marginTop="10dp"
-            />
+            android:backgroundTint="@color/main_color"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/etPassword" />
 
         <Button
             android:id="@+id/btnApply"
-            android:text="Apply"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="80dp"
             android:layout_marginBottom="100dp"
-            />
+            android:text="Apply"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnCancel"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <Button
             android:id="@+id/btnCancel"
-            android:text="Cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="100dp"
+            android:text="Cancel"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginEnd="80dp"
-            android:layout_marginBottom="100dp"
-            />
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/btnApply" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

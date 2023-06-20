@@ -35,12 +35,6 @@ public class EditAlertFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        activity = (MainActivity) getActivity();
-        activity.getSupportActionBar().setTitle(R.string.fragment_edit_alert_create_title);
-    }
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -50,6 +44,7 @@ public class EditAlertFragment extends Fragment {
                              Bundle savedInstanceState) {
         binding = FragmentEditAlertBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_edit_alert_create_title);
         context = activity.getApplicationContext();
         serverService = new ServerService(MainActivity.database);
         binding.spinAlertType.setEnabled(false);

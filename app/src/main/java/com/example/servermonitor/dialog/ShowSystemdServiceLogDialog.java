@@ -14,6 +14,7 @@ import androidx.fragment.app.DialogFragment;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
+import com.example.servermonitor.helper.UiHelper;
 import com.example.servermonitor.model.SystemdServiceModel;
 import com.example.servermonitor.service.SshSessionWorker;
 
@@ -47,17 +48,19 @@ public class ShowSystemdServiceLogDialog extends DialogFragment {
             activity.runOnUiThread(() -> {
                 tvLoading.setVisibility(View.VISIBLE);
             });
-            String output = sshSessionWorker.executeSingleCommand("journalctl --no-pager -u "
-                + systemdServiceModel.serviceName);
+            String output = null;
+            try {
+                output = sshSessionWorker.executeSingleCommand("journalctl --no-pager -u "
+                    + systemdServiceModel.serviceName);
+            } catch (Exception e) {
+                UiHelper.displayError(activity, "Failed to fetch log output");
+                return;
+            }
+            String finalOutput = output;
             activity.runOnUiThread(() -> {
                 tvLoading.setVisibility(View.GONE);
-                tvLogOutput.setText(output);
-                scrollView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        scrollView.fullScroll(ScrollView.FOCUS_DOWN);
-                    }
-                });
+                tvLogOutput.setText(finalOutput);
+                scrollView.post(() -> scrollView.fullScroll(ScrollView.FOCUS_DOWN));
             });
         }).start();
         return rootView;

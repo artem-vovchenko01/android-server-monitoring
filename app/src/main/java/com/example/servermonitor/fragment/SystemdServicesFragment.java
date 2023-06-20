@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.adapter.SystemdServicesAdapter;
@@ -40,14 +41,6 @@ public class SystemdServicesFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        activity = (MainActivity) getActivity();
-        this.context = context;
-        activity.getSupportActionBar().setTitle("Systemd services");
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -56,6 +49,9 @@ public class SystemdServicesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         binding = FragmentSystemdServicesBinding.inflate(inflater, container, false);
+        activity = (MainActivity) getActivity();
+        context = activity.getApplicationContext();
+        activity.getSupportActionBar().setTitle("Systemd services");
         setupUiComponents();
         new Thread(() -> {
             Bundle args = getArguments();
@@ -68,9 +64,16 @@ public class SystemdServicesFragment extends Fragment {
             try {
                 sshSessionWorker = new SshSessionWorker(context, server, sshKeyService.getSshKeyForServer(server));
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                displayError("Error occurred while establishing SSH connection");
+                return;
             }
-            String output = sshSessionWorker.executeSingleCommand(GET_SYSTEMD_SERVICES_COMMAND);
+            String output = null;
+            try {
+                output = sshSessionWorker.executeSingleCommand(GET_SYSTEMD_SERVICES_COMMAND);
+            } catch (Exception e) {
+                displayError("Error occurred while trying to fetch data");
+                return;
+            }
             parseSystemdServices(output);
             adapter = new SystemdServicesAdapter(context, systemdServices, activity, this);
             activity.runOnUiThread(() -> {
@@ -79,6 +82,11 @@ public class SystemdServicesFragment extends Fragment {
             });
         }).start();
         return binding.getRoot();
+    }
+    public void displayError(String error) {
+        activity.runOnUiThread(() -> {
+            Toast.makeText(context, error, Toast.LENGTH_LONG).show();
+        });
     }
 
     public void setupUiComponents() {

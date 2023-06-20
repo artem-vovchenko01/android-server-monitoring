@@ -13,9 +13,18 @@ public class FileLoadingProgressMonitor implements SftpProgressMonitor {
     private double progress;;
     private String progressPercents = "0";
     private NumberFormat formatter = new DecimalFormat("#0.00", DecimalFormatSymbols.getInstance(Locale.US));
+    private boolean totalBytesAlreadySet = false;
+    public FileLoadingProgressMonitor() {
+
+    }
+    public FileLoadingProgressMonitor(long size) {
+        totalBytes = size;
+        totalBytesAlreadySet = true;
+    }
     @Override
     public void init(int op, String src, String dest, long max) {
-        totalBytes = max;
+        if (! totalBytesAlreadySet)
+            totalBytes = max;
     }
 
     @Override

@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import com.example.servermonitor.MainActivity;
 import com.example.servermonitor.R;
+import com.example.servermonitor.helper.UiHelper;
 import com.example.servermonitor.service.SshSessionWorker;
 import com.example.servermonitor.adapter.ServerAdapter;
 import com.example.servermonitor.databinding.FragmentServersBinding;
@@ -60,8 +61,6 @@ public class ServersFragment extends Fragment {
         return binding.getRoot();
     }
 
-
-
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -100,7 +99,8 @@ public class ServersFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        activity.serverAdapter = null;
+        if (activity != null)
+            activity.serverAdapter = null;
     }
 
     @Override
@@ -127,13 +127,21 @@ public class ServersFragment extends Fragment {
             case "Reboot":
                 new Thread(() -> {
                     SshSessionWorker worker = activity.serverSessions.get(server);
-                    worker.executeSingleCommand("reboot");
+                    try {
+                        worker.executeSingleCommand("sudo reboot");
+                    } catch (Exception e) {
+                        UiHelper.displayError(activity, "Reboot failed");
+                    }
                 }).start();
                 break;
             case "Shutdown":
                 new Thread(() -> {
                     SshSessionWorker worker = activity.serverSessions.get(server);
-                    worker.executeSingleCommand("shutdown now");
+                    try {
+                        worker.executeSingleCommand("sudo shutdown now");
+                    } catch (Exception e) {
+                        UiHelper.displayError(activity, "Shutdown failed");
+                    }
                 }).start();
                 break;
         }

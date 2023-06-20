@@ -239,6 +239,29 @@ public class SshShellSessionWorker implements AutoCloseable {
         results.add(monitor);
         return results;
     }
+    public List<Object> copyFromLocalUsingStreams(String destinationPath, InputStream is, long size) {
+        ArrayList<Object> results = new ArrayList<>();
+        if (channelSftp == null) {
+            try {
+                channelSftp = (ChannelSftp) session.openChannel("sftp");
+                channelSftp.connect();
+            } catch (JSchException e) {
+                results.add(false);
+                return results;
+            }
+        }
+        FileLoadingProgressMonitor monitor = new FileLoadingProgressMonitor(size);
+        new Thread(() -> {
+            try {
+                channelSftp.put(is, destinationPath, monitor);
+            } catch (Exception e) {
+                int i = 5;
+            }
+        }).start();
+        results.add(true);
+        results.add(monitor);
+        return results;
+    }
     public List<Object> copyFromServer(String remotePath, String remoteName, String localDirectory) {
         ArrayList<Object> results = new ArrayList<>();
         if (channelSftp == null) {
@@ -260,6 +283,27 @@ public class SshShellSessionWorker implements AutoCloseable {
         results.add(monitor);
         return results;
     }
+    public List<Object> copyFromServerGetInputStream(String remotePath) throws SftpException {
+        ArrayList<Object> results = new ArrayList<>();
+        if (channelSftp == null) {
+            try {
+                channelSftp = (ChannelSftp) session.openChannel("sftp");
+                channelSftp.connect();
+            } catch (JSchException e) {
+                results.add(false);
+                return results;
+            }
+        }
+        FileLoadingProgressMonitor monitor = new FileLoadingProgressMonitor();
+        SftpATTRS attrs = channelSftp.lstat(remotePath);
+        long fileSize = attrs.getSize();
+        InputStream is = channelSftp.get(remotePath, monitor);
+        results.add(true);
+        results.add(monitor);
+        results.add(is);
+        results.add(fileSize);
+        return results;
+    }
     public List<Object> copyFromServerUsingStreams(String remotePath, OutputStream os) {
         ArrayList<Object> results = new ArrayList<>();
         if (channelSftp == null) {
@@ -274,8 +318,7 @@ public class SshShellSessionWorker implements AutoCloseable {
         FileLoadingProgressMonitor monitor = new FileLoadingProgressMonitor();
         new Thread(() -> {
             try {
-                InputStream is = channelSftp.get(remotePath, monitor);
-                FileOperations.copyDataBetweenStreams(is, os);
+                channelSftp.get(remotePath, os, monitor);
             } catch (Exception e) {}
         }).start();
         results.add(true);

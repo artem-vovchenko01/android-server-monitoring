@@ -56,13 +56,6 @@ public class LocalFilesFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        activity = (MainActivity) getActivity();
-        activity.getSupportActionBar().setTitle(R.string.fragment_local_files_title);
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -72,6 +65,7 @@ public class LocalFilesFragment extends Fragment {
                              Bundle savedInstanceState) {
         binding = FragmentLocalFilesBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_local_files_title);
         sshKeyService = new SshKeyService(MainActivity.database);
         context = activity.getApplicationContext();
         setupListeners();
@@ -182,7 +176,7 @@ public class LocalFilesFragment extends Fragment {
         File file = files[pposition - 2];
         switch (item.getTitle().toString()) {
             case "Copy":
-                FileOperations.localFileToCopy = file;
+                FileOperations.setLocalFileForCopy(file);
                 break;
             case "Edit":
                 break;
@@ -213,8 +207,13 @@ public class LocalFilesFragment extends Fragment {
         PopupMenu popupMenu = new PopupMenu(getContext(), view);
         popupMenu.inflate(R.menu.file_browser_menu);
         MenuItem pasteItem = popupMenu.getMenu().getItem(2);
-        if (FileOperations.remoteFileToCopy != null && UiHelper.serverStillExists(activity, FileOperations.serverModelWantToCopyFrom)) {
-            pasteItem.setTitle("Paste " + FileOperations.remoteFileShortName);
+        if (FileOperations.existsFileToCopy()) {
+            if (FileOperations.existsRemoteFileToCopy() &&
+            ! UiHelper.serverStillExists(activity, FileOperations.getServerModelWantToCopyFrom())) {
+                pasteItem.setEnabled(false);
+            } else {
+                pasteItem.setTitle("Paste " + FileOperations.fileToCopyName());
+            }
         } else {
             pasteItem.setEnabled(false);
         }
@@ -229,24 +228,10 @@ public class LocalFilesFragment extends Fragment {
             }
             else if (itemId == R.id.miPaste) {
                 new Thread(() -> {
-                    ServerModel server = FileOperations.serverModelWantToCopyFrom;
-                    Optional<SshKeyModel> sshKey = sshKeyService.getSshKeyForServer(server);
-                    SshShellSessionWorker shellSessionWorker = null;
-                    try {
-                        shellSessionWorker = new SshShellSessionWorker(context, FileOperations.serverModelWantToCopyFrom, sshKey);
-                    } catch (Exception e) {
-                        activity.runOnUiThread(() ->
-                                Toast.makeText(context, "Error while connecting to server.", Toast.LENGTH_LONG));
-                        return;
-                    }
-                    List<Object> results = shellSessionWorker.copyFromServer(FileOperations.remoteFileToCopy, FileOperations.remoteFileShortName, currentPath);
-                    if ((boolean) results.get(0)) {
-                        FileLoadingProgressMonitor monitor = (FileLoadingProgressMonitor) results.get(1);
-                        UiHelper.monitorProgress(getContext(), activity, monitor, () -> {
-                            goToPath(currentDirectory);
-                            return null;
-                        });
-                    }
+                    FileOperations.copyFileToCopy(activity, getContext(), null, currentPath, () -> {
+                        goToPath(currentDirectory);
+                        return null;
+                    });
                 }).start();
             }
             return false;

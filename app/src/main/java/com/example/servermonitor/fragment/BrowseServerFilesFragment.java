@@ -40,6 +40,7 @@ import com.example.servermonitor.service.SshKeyService;
 import com.example.servermonitor.service.SshShellSessionWorker;
 import com.jcraft.jsch.ChannelSftp;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -68,12 +69,6 @@ public class BrowseServerFilesFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        activity = (MainActivity) getActivity();
-        activity.getSupportActionBar().setTitle(R.string.fragment_browse_files_title);
-    }
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -84,6 +79,7 @@ public class BrowseServerFilesFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentBrowseServerFilesBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_browse_files_title);
         context = activity.getApplicationContext();
         setupListeners();
         sshKeyService = new SshKeyService(MainActivity.database);
@@ -98,28 +94,30 @@ public class BrowseServerFilesFragment extends Fragment {
             try {
                 sshSessionWorker = new SshSessionWorker(context, server, sshKey);
                 shellSessionWorker = new SshShellSessionWorker(context, server, sshKey);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            String homeDir = sshSessionWorker.executeSingleCommand("pwd").replace("\n", "");
-            currentPath = homeDir;
-            homePath = homeDir;
-            binding.tvPath.setText(homeDir);
-            lsEntries = shellSessionWorker.listDir(homeDir, this);
-            if (lsEntries == null) {
-                lsEntries = new Vector<>();
+                String homeDir = sshSessionWorker.executeSingleCommand("pwd").replace("\n", "");
+                currentPath = homeDir;
+                homePath = homeDir;
+                binding.tvPath.setText(homeDir);
+                lsEntries = shellSessionWorker.listDir(homeDir, this);
+                if (lsEntries == null) {
+                    lsEntries = new Vector<>();
+                    activity.runOnUiThread(() -> {
+                        Toast.makeText(context, "Error occurred while loading directory listing", Toast.LENGTH_LONG).show();
+                    });
+                }
+                adapter = new ServerFilesAdapter(context, lsEntries, activity, this);
                 activity.runOnUiThread(() -> {
-                    Toast.makeText(context, "Error occurred while loading directory listing", Toast.LENGTH_LONG).show();
+                    binding.rvServerFiles.setAdapter(adapter);
+                    setLoaded();
+                    RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(context);
+                    binding.rvServerFiles.setLayoutManager(layoutManager);
+                    binding.rvServerFiles.setItemAnimator(new DefaultItemAnimator());
+                });
+            } catch (Exception e) {
+                activity.runOnUiThread(() -> {
+                    Toast.makeText(context, "Couldn't establish the connection with the server", Toast.LENGTH_LONG);
                 });
             }
-            adapter = new ServerFilesAdapter(context, lsEntries, activity, this);
-            activity.runOnUiThread(() -> {
-                binding.rvServerFiles.setAdapter(adapter);
-                setLoaded();
-                RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(context);
-                binding.rvServerFiles.setLayoutManager(layoutManager);
-                binding.rvServerFiles.setItemAnimator(new DefaultItemAnimator());
-            });
         }).start();
         return binding.getRoot();
     }
@@ -189,9 +187,7 @@ public class BrowseServerFilesFragment extends Fragment {
             case "Edit":
                 break;
             case "Copy":
-                FileOperations.remoteFileToCopy = currentPath + "/" + entry.getFilename();
-                FileOperations.remoteFileShortName = entry.getFilename();
-                FileOperations.serverModelWantToCopyFrom = server;
+                FileOperations.setRemoteFileForCopy(server, currentPath + "/" + entry.getFilename(), entry.getFilename());
                 break;
             case "Download":
                 new Thread(() -> {
@@ -271,10 +267,15 @@ public class BrowseServerFilesFragment extends Fragment {
         PopupMenu popupMenu = new PopupMenu(getContext(), view);
         popupMenu.inflate(R.menu.file_browser_menu);
         MenuItem pasteItem = popupMenu.getMenu().getItem(2);
-        if (FileOperations.localFileToCopy == null) {
-            pasteItem.setEnabled(false);
+        if (FileOperations.existsFileToCopy()) {
+            if (FileOperations.existsRemoteFileToCopy() &&
+            !UiHelper.serverStillExists(activity, FileOperations.getServerModelWantToCopyFrom())) {
+               pasteItem.setEnabled(false);
+            } else {
+                pasteItem.setTitle("Paste " + FileOperations.getShortFileNameToCopy());
+            }
         } else {
-            pasteItem.setTitle("Paste " + FileOperations.localFileToCopy.getName());
+            pasteItem.setEnabled(false);
         }
 
         popupMenu.setOnMenuItemClickListener(i -> {
@@ -297,14 +298,10 @@ public class BrowseServerFilesFragment extends Fragment {
             }
             else if (itemId == R.id.miPaste) {
                 new Thread(() -> {
-                    List<Object> results = shellSessionWorker.copyFromLocal(FileOperations.localFileToCopy.getAbsolutePath(), FileOperations.localFileToCopy.getName(), currentPath);
-                    if ((boolean) results.get(0)) {
-                        FileLoadingProgressMonitor monitor = (FileLoadingProgressMonitor) results.get(1);
-                        UiHelper.monitorProgress(getContext(), activity, monitor, () -> {
-                            goToPath(".");
-                            return null;
-                        });
-                    }
+                    FileOperations.copyFileToCopy(activity, getContext(), server, currentPath, () -> {
+                        goToPath(".");
+                        return null;
+                    });
                 }).start();
             }
             return false;

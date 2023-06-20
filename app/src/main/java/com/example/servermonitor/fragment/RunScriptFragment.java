@@ -40,12 +40,6 @@ public class RunScriptFragment extends Fragment {
     private SshKeyService sshKeyService;
     private ServerService serverService;
 
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        activity = (MainActivity) getActivity();
-        activity.getSupportActionBar().setTitle(R.string.fragment_run_shell_script_title);
-    }
     public RunScriptFragment() {
         // Required empty public constructor
     }
@@ -60,6 +54,7 @@ public class RunScriptFragment extends Fragment {
                              Bundle savedInstanceState) {
         binding = FragmentRunScriptBinding.inflate(inflater, container, false);
         activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_run_shell_script_title);
         context = activity.getApplicationContext();
         sshKeyService = new SshKeyService(MainActivity.database);
         Bundle args = getArguments();
@@ -99,14 +94,25 @@ public class RunScriptFragment extends Fragment {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                    String output = sshSessionWorker.executeShellScript(shellScript.getScriptData());
+                    boolean success = true;
+                    String output = null;
+                    try {
+                        output = sshSessionWorker.executeShellScript(shellScript.getScriptData());
+                    } catch (Exception e) {
+                        success = false;
+                    }
+                    String finalOutput = output;
+                    boolean finalSuccess = success;
                     activity.runOnUiThread(() -> {
                        btnScriptRunning.setVisibility(View.GONE);
-                       btnShowOutput.setOnClickListener((view) -> {
-                           ShowScriptOutputDialog dialog = new ShowScriptOutputDialog();
-                           dialog.setOutputText(output);
-                           dialog.show(getChildFragmentManager(), "Script output");
-                       });
+                       if (finalSuccess) {
+                           btnShowOutput.setOnClickListener((view) -> {
+                               ShowScriptOutputDialog dialog = new ShowScriptOutputDialog();
+                               dialog.setOutputText(finalOutput);
+                               dialog.show(getChildFragmentManager(), "Script output");
+                           });
+                       } else
+                           btnShowOutput.setText("Failed to run script");
                        btnShowOutput.setVisibility(View.VISIBLE);
                     });
                 }).start();

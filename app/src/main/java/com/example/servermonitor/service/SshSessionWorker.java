@@ -63,7 +63,7 @@ public class SshSessionWorker implements AutoCloseable {
                 session.setPassword(password);
             }
             session.setConfig("StrictHostKeyChecking", "no");
-            session.setTimeout(10000);
+            session.setTimeout(5000);
             session.connect();
         } catch (JSchException e) {
             Log.d(TAG, "JSch exception occurred while getting the session");
@@ -83,7 +83,11 @@ public class SshSessionWorker implements AutoCloseable {
                 DISK_USED_MB_COMMAND +
                 DISK_TOTAL_MB_COMMAND +
                 CPU_USAGE_COMMAND;
-        output = executeSingleCommand(commandList);
+        try {
+            output = executeSingleCommand(commandList);
+        } catch (Exception e) {
+            return null;
+        }
         return parseMonitoringOutput(output);
     }
     private MonitoringRecordEntity parseMonitoringOutput(String output) {
@@ -104,7 +108,7 @@ public class SshSessionWorker implements AutoCloseable {
        }
        return monitoringRecordEntity;
     }
-    public String executeShellScript(String scriptContents) {
+    public String executeShellScript(String scriptContents) throws Exception {
         String homeDirPath = executeSingleCommand("pwd").replace("\n", "");
         String serverFileName = homeDirPath + "/scriptToExecute.sh";
         putFileFromText(scriptContents, serverFileName);
@@ -142,7 +146,7 @@ public class SshSessionWorker implements AutoCloseable {
         return true;
     }
 
-    public String executeSingleCommand(String command) {
+    public String executeSingleCommand(String command) throws Exception {
         String result = "";
         try {
             if (currentlyExecutingCommand != null) currentlyExecutingCommand.disconnect();
@@ -154,7 +158,7 @@ public class SshSessionWorker implements AutoCloseable {
             channelExec.disconnect();
             currentlyExecutingCommand = null;
         } catch (JSchException e) {
-            throw new RuntimeException(e);
+            throw new Exception(e);
         }
         return result;
     }

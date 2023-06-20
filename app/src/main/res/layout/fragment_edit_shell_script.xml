@@ -9,20 +9,19 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="80dp"
         android:layout_marginStart="20dp"
+        android:layout_marginTop="80dp"
         android:layout_marginEnd="20dp"
-        android:textSize="20sp"
-        android:padding="10dp">
+        android:padding="10dp"
+        android:textSize="20sp">
 
         <TextView
-            android:text="Shell script name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/etShellScriptName"
+            android:text="Shell script name"
             app:layout_constraintBottom_toBottomOf="@+id/etShellScriptName"
-            />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/etShellScriptName" />
 
         <EditText
             android:id="@+id/etShellScriptName"
@@ -30,56 +29,54 @@
             android:layout_height="wrap_content"
             android:backgroundTint="@color/main_color"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/tvShellScriptDataLabel"
-            android:text="Shell script data"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
+            android:text="Shell script data"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/etShellScriptName"
-            />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/etShellScriptName" />
 
         <ScrollView
             android:id="@+id/svEditScript"
             android:layout_width="0dp"
-            app:layout_constraintTop_toBottomOf="@id/tvShellScriptDataLabel"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@id/btnApply"
-            android:layout_height="0dp">
-        <EditText
-            android:id="@+id/etShellScriptData"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:backgroundTint="@color/main_color"
-            />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvShellScriptDataLabel">
+
+            <EditText
+                android:id="@+id/etShellScriptData"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:backgroundTint="@color/main_color" />
         </ScrollView>
 
         <Button
             android:id="@+id/btnApply"
-            android:text="Apply"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/svEditScript"
+            android:text="Apply"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnCancel"
+            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="80dp"
-            />
+            app:layout_constraintTop_toBottomOf="@id/svEditScript" />
 
         <Button
             android:id="@+id/btnCancel"
-            android:text="Cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Cancel"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/svEditScript"
-            android:layout_marginEnd="80dp"
-            />
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/btnApply"
+            app:layout_constraintTop_toBottomOf="@id/svEditScript" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

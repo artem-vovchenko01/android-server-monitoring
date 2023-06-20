@@ -29,12 +29,6 @@ public class EditSshKeyFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        activity = (MainActivity) getActivity();
-        activity.getSupportActionBar().setTitle(R.string.fragment_edit_ssh_key_create_title);
-    }
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -45,6 +39,7 @@ public class EditSshKeyFragment extends Fragment {
         binding = FragmentEditSshKeyBinding.inflate(inflater, container, false);
         sshKeyModel = new SshKeyModel();
         activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_edit_ssh_key_create_title);
         context = activity.getApplicationContext();
         Bundle args = getArguments();
         fetchData(args);

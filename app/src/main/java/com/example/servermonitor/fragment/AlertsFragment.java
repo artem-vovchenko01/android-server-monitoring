@@ -40,13 +40,6 @@ public class AlertsFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        activity = (MainActivity) getActivity();
-        activity.getSupportActionBar().setTitle(R.string.fragment_alerts_title);
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -56,6 +49,8 @@ public class AlertsFragment extends Fragment {
                              Bundle savedInstanceState) {
         binding = FragmentAlertsBinding.inflate(inflater, container, false);
         alertService = new AlertService(MainActivity.database);
+        activity = (MainActivity) getActivity();
+        activity.getSupportActionBar().setTitle(R.string.fragment_alerts_title);
         context = activity.getApplicationContext();
         setupListeners();
         setupAdapter();
