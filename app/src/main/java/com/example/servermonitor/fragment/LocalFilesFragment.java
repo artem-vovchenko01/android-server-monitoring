@@ -104,7 +104,7 @@ public class LocalFilesFragment extends Fragment {
             NavController controller = Navigation.findNavController(binding.getRoot());
             Bundle args = new Bundle();
             args.putParcelable("serverModel", FileOperations.serverModelLastBrowsedFiles);
-            controller.navigate(R.id.browseServerFilesFragment, args);
+            controller.navigate(R.id.action_localFilesFragment_to_browseServerFilesFragment, args);
         });
     }
     private void createDirectory() {

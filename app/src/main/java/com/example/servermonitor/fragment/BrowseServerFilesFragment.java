@@ -2,8 +2,10 @@ package com.example.servermonitor.fragment;
 
 import static android.app.Activity.RESULT_OK;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -18,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Environment;
+import android.provider.OpenableColumns;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -43,6 +46,7 @@ import com.jcraft.jsch.ChannelSftp;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Optional;
@@ -133,7 +137,7 @@ public class BrowseServerFilesFragment extends Fragment {
         });
         binding.btnLocalFiles.setOnClickListener(v -> {
             NavController controller = Navigation.findNavController(binding.getRoot());
-            controller.navigate(R.id.localFilesFragment);
+            controller.navigate(R.id.action_browseServerFilesFragment_to_localFilesFragment);
         });
         binding.btnMenu.setOnClickListener(this::showPopupMenu);
     }
@@ -184,6 +188,15 @@ public class BrowseServerFilesFragment extends Fragment {
         int pposition = adapter.selectedItemPosition;
         ChannelSftp.LsEntry entry = lsEntries.get(pposition);
         switch (item.getTitle().toString()) {
+            case "Rename":
+                UiHelper.createDirectoryAfterDialog(getContext(), (name) -> {
+                    new Thread(() -> {
+                        shellSessionWorker.sftpMv(currentPath + "/" + entry.getFilename(),
+                                currentPath + "/" + name);
+                        goToPath(currentPath);
+                    }).start();
+                });
+                entry.getFilename();
             case "Edit":
                 break;
             case "Copy":
@@ -257,6 +270,47 @@ public class BrowseServerFilesFragment extends Fragment {
             Uri uri = data.getData();
             if (uri != null) {
                 new Thread(() -> {
+                    ContentResolver contentResolver = context.getContentResolver();
+                    InputStream is = null;
+                    try {
+                        is = contentResolver.openInputStream(uri);
+                    } catch (FileNotFoundException e) {
+                        UiHelper.displayError(activity, "Error while opening file");
+                    }
+
+                    long size = 1000;
+                    String name = "";
+
+                    Cursor cursor = null;
+                    try {
+                        cursor = contentResolver.query(uri, null, null, null, null);
+                        if (cursor != null && cursor.moveToFirst()) {
+                            int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                            if (sizeIndex != -1) {
+                                size = cursor.getLong(sizeIndex);
+                            }
+                            int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                            if (nameIndex != -1) {
+                                name = cursor.getString(nameIndex);
+                            }
+                        }
+                    } finally {
+                        if (cursor != null) {
+                            cursor.close();
+                        }
+                    }
+
+                    List<Object> results = shellSessionWorker.copyFromLocalUsingStreams(currentPath + "/" + name, is, size);
+                    if (!(boolean) results.get(0)) {
+                        activity.runOnUiThread(() ->
+                                Toast.makeText(context, "Upload failed", Toast.LENGTH_LONG).show());
+                    } else {
+                        FileLoadingProgressMonitor monitor = (FileLoadingProgressMonitor) results.get(1);
+                        UiHelper.monitorProgress(getContext(), activity, monitor, () -> {
+                            goToPath(currentPath);
+                            return null;
+                        });
+                    }
                 }).start();
             }
         }
@@ -280,7 +334,10 @@ public class BrowseServerFilesFragment extends Fragment {
 
         popupMenu.setOnMenuItemClickListener(i -> {
             int itemId = i.getItemId();
-            if (itemId == R.id.miNewDirectory) {
+            if (itemId == R.id.miUpload) {
+                 UiHelper.openFilePicker(this);
+            }
+            else if (itemId == R.id.miNewDirectory) {
                 UiHelper.createDirectoryAfterDialog(getContext(), directoryName -> new Thread(() -> {
                     if (!shellSessionWorker.mkdir(directoryName)) {
                         activity.runOnUiThread(() -> Toast.makeText(context, "Couldn't create a directory", Toast.LENGTH_LONG).show());

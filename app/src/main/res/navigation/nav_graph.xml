@@ -88,7 +88,11 @@
         android:id="@+id/browseServerFilesFragment"
         android:name="com.example.servermonitor.fragment.BrowseServerFilesFragment"
         android:label="fragment_browse_server_files"
-        tools:layout="@layout/fragment_browse_server_files" />
+        tools:layout="@layout/fragment_browse_server_files" >
+        <action
+            android:id="@+id/action_browseServerFilesFragment_to_localFilesFragment"
+            app:destination="@id/localFilesFragment" />
+    </fragment>
     <fragment
         android:id="@+id/alertsFragment"
         android:name="com.example.servermonitor.fragment.AlertsFragment"
@@ -107,7 +111,11 @@
         android:id="@+id/localFilesFragment"
         android:name="com.example.servermonitor.fragment.LocalFilesFragment"
         android:label="fragment_local_files"
-        tools:layout="@layout/fragment_local_files" />
+        tools:layout="@layout/fragment_local_files" >
+        <action
+            android:id="@+id/action_localFilesFragment_to_browseServerFilesFragment"
+            app:destination="@id/browseServerFilesFragment" />
+    </fragment>
     <fragment
         android:id="@+id/monitoringSessionsFragment"
         android:name="com.example.servermonitor.fragment.MonitoringSessionsFragment"

@@ -227,6 +227,14 @@ public class SshShellSessionWorker implements AutoCloseable {
         }
         return false;
     }
+    public Boolean sftpMv(String oldPath, String newPath) {
+        try {
+            channelSftp.rename(oldPath, newPath);
+        } catch (SftpException e) {
+            return false;
+        }
+        return true;
+    }
     public List<Object> copyFromLocal(String localFullPath, String localFileName, String remoteDirectory) {
         ArrayList<Object> results = new ArrayList<>();
         FileLoadingProgressMonitor monitor = new FileLoadingProgressMonitor();

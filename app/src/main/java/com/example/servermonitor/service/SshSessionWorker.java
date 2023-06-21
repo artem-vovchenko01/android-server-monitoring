@@ -90,6 +90,9 @@ public class SshSessionWorker implements AutoCloseable {
         }
         return parseMonitoringOutput(output);
     }
+    private void renamePath(String oldPath, String newPath) {
+
+    }
     private MonitoringRecordEntity parseMonitoringOutput(String output) {
         MonitoringRecordEntity monitoringRecordEntity = new MonitoringRecordEntity();
         try {
